@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.next-*/
+.vercel/
+.npm-cache/
+out/
+dist/
+tsconfig.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+desktop.ini

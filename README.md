@@ -22,7 +22,13 @@ Shared engine dependency:
 https://github.com/adireaudio8/enclosure-engine
 ```
 
-Treat the engine repo as read-only unless a dedicated engine change is requested. If it is private, Vercel must have GitHub access to it or `npm install` will fail.
+Treat the engine repo as read-only unless a dedicated engine change is requested. This app currently installs a vendored package snapshot from:
+
+```text
+vendor/adireaudio-enclosure-engine-0.0.0.tgz
+```
+
+That avoids Vercel needing SSH/GitHub access to the private `enclosure-engine` repo during `npm install`. To refresh the vendored engine after intentional engine changes, run `npm pack` from the `enclosure-engine` repo, replace the tarball in `vendor/`, then run `npm install` in this app to update `package-lock.json`.
 
 ## Shopify app proxy
 
@@ -76,7 +82,7 @@ The browser never controls price. The checkout endpoint revalidates the design t
 
 Before switching storefront navigation to this app, test:
 
-- Vercel deployment installs `@adireaudio/enclosure-engine`.
+- Vercel deployment installs the vendored `@adireaudio/enclosure-engine` package without GitHub SSH access.
 - App proxy requests pass Shopify signature verification.
 - Supabase pricing returns the expected MAP/dealer values.
 - Logged-in customer tags resolve customer/dealer/distributor tier correctly.

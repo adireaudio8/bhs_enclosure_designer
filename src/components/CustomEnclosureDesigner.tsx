@@ -499,7 +499,7 @@ export default function CustomEnclosureDesigner() {
               16:9 box doesn't push everything below the fold on small
               laptop screens (1366×768). */}
           <div className="space-y-2">
-            <div className="w-full bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden h-[clamp(260px,44vh,420px)]">
+            <div className="bhs-viewer-shell w-full bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden h-[clamp(300px,48vh,520px)]">
               <EnclosureViewer3D />
             </div>
             <p className="text-xs text-text-muted">
@@ -552,7 +552,7 @@ export default function CustomEnclosureDesigner() {
                 </Field>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                 <Field label="Sub qty">
                   <select
                     className="select-base"
@@ -589,7 +589,7 @@ export default function CustomEnclosureDesigner() {
                     ))}
                   </select>
                 </Field>
-                <Field label="Subs facing">
+                <Field label="Subs facing" className="col-span-2 sm:col-span-1">
                   <select
                     className="select-base"
                     value={inputs.enclosureConfiguration}
@@ -631,7 +631,7 @@ export default function CustomEnclosureDesigner() {
               {/* Most-edited tuning controls live up here next to the brand/size
                   pickers so the customer doesn't have to look down at a
                   separate "Dimensions" card to tweak them. */}
-              <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-neutral-800">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 pt-2 border-t border-neutral-800">
                 <Field label="Tuning (Hz)">
                   <NumberInput
                     value={inputs.tuningFrequency}
@@ -670,7 +670,7 @@ export default function CustomEnclosureDesigner() {
                 </Field>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                 <Field label="Sub displacement (cu ft)">
                   <NumberInput
                     value={inputs.subDisplacement}
@@ -788,7 +788,8 @@ export default function CustomEnclosureDesigner() {
             </div>
             {!isTerminalCustomized ? (
               <p className="text-[11px] text-text-muted">
-                Default: <span className="text-neutral-300 font-mono">{resolvedTerminalPanel}</span> panel,
+                Default: <span className="text-neutral-300 font-mono">{resolvedTerminalPanel}</span>{' '}
+                panel,
                 centered, 2.125&quot; from bottom. Check &ldquo;Customize&rdquo; to override or skip.
               </p>
             ) : (
@@ -986,7 +987,7 @@ export default function CustomEnclosureDesigner() {
             <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
               Dimensions
             </h2>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field label="Height (in)">
               <NumberInput
                 value={inputs.boxHeight}
@@ -1054,6 +1055,62 @@ export default function CustomEnclosureDesigner() {
         :global(.btn-toggle-on:hover) {
           background: rgb(185 28 28);
         }
+        :global(.bhs-viewer-shell > div) {
+          height: 100%;
+          min-height: 100%;
+          display: flex;
+          flex-direction: column;
+          background: rgb(23 23 23);
+          border: 0;
+          border-radius: 0.5rem;
+        }
+        :global(.bhs-viewer-shell > div > div:first-child) {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          padding: 0.35rem 0.5rem;
+          background: rgb(17 17 17);
+          border-color: rgb(38 38 38);
+        }
+        :global(.bhs-viewer-shell h3) {
+          color: rgb(245 245 245);
+          font-size: 0.8rem;
+          line-height: 1rem;
+          white-space: nowrap;
+        }
+        :global(.bhs-viewer-shell button) {
+          border-radius: 0.25rem;
+          background: rgb(38 38 38);
+          color: white;
+          font-size: 0.68rem;
+          line-height: 1rem;
+          padding: 0.2rem 0.38rem;
+          white-space: nowrap;
+          transition: background 0.15s ease;
+        }
+        :global(.bhs-viewer-shell button:hover) {
+          background: rgb(64 64 64);
+        }
+        :global(.bhs-viewer-shell > div > div:last-child) {
+          flex: 1 1 auto;
+          min-height: 0;
+        }
+        :global(.bhs-viewer-shell canvas) {
+          height: 100% !important;
+        }
+        @media (max-width: 640px) {
+          :global(.bhs-viewer-shell > div > div:first-child) {
+            gap: 0.35rem;
+          }
+          :global(.bhs-viewer-shell h3) {
+            font-size: 0.74rem;
+          }
+          :global(.bhs-viewer-shell button) {
+            font-size: 0.62rem;
+            padding: 0.18rem 0.32rem;
+          }
+        }
       `}</style>
     </div>
   );
@@ -1064,12 +1121,14 @@ export default function CustomEnclosureDesigner() {
 function Field({
   label,
   children,
+  className = '',
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <label className="block mb-3 last:mb-0">
+    <label className={`block mb-3 last:mb-0 ${className}`}>
       <span className="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1.5">
         {label}
       </span>
