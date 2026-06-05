@@ -1,0 +1,56 @@
+# BHS Enclosure Designer App
+
+Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
+
+## Shopify app proxy
+
+Configure the custom app proxy in Shopify Dev Dashboard after the app is deployed to Vercel:
+
+```toml
+[app_proxy]
+url = "/apps/enclosure-designer"
+prefix = "apps"
+subpath = "enclosure-designer"
+```
+
+The customer-facing storefront URL will be:
+
+```text
+https://bassheadsupply.com/apps/enclosure-designer
+```
+
+The current Shopify page can link or redirect to that app proxy URL.
+
+Do not change the theme navigation to this URL until the Vercel deployment is live and the proxy test passes.
+
+## Required Vercel environment variables
+
+Copy `.env.example` and set:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SHOPIFY_SHOP_DOMAIN`
+- `SHOPIFY_ADMIN_ACCESS_TOKEN`
+- `SHOPIFY_API_SECRET`
+
+The app needs Shopify Admin API access to create draft orders. If customer tier pricing is used, the token also needs customer read access so logged-in customer tags can be checked.
+
+Recommended Admin API scopes:
+
+- `read_customers`
+- `read_draft_orders`
+- `write_draft_orders`
+
+## Checkout behavior
+
+The browser never controls price. The checkout endpoint revalidates the design through `/apps/enclosure-designer/api/design-pricing`, creates a Shopify draft order with a custom-priced line item, then redirects the customer to the draft order invoice URL.
+
+## Local checks
+
+```powershell
+npm install --cache .npm-cache
+npm run typecheck
+$env:NEXT_DIST_DIR='.next-codex'; npm run build
+```
+
+The alternate local build folder avoids Windows/OneDrive locks in the default `.next` directory. Vercel can use the normal default output.
