@@ -2,6 +2,22 @@
 
 Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
 
+Standalone app repo:
+
+```text
+https://github.com/adireaudio8/bhs_enclosure_designer
+```
+
+Use that repo root for the Vercel project. This folder remains in the Shopify theme repo as the migration snapshot, but app deployment work should happen from the standalone app repo.
+
+Shared engine dependency:
+
+```text
+https://github.com/adireaudio8/enclosure-engine
+```
+
+Treat the engine repo as read-only unless a dedicated engine change is requested. If it is private, Vercel must have GitHub access to it or `npm install` will fail.
+
 ## Shopify app proxy
 
 Configure the custom app proxy in Shopify Dev Dashboard after the app is deployed to Vercel:
@@ -34,6 +50,13 @@ Copy `.env.example` and set:
 - `SHOPIFY_API_SECRET`
 
 The app needs Shopify Admin API access to create draft orders. If customer tier pricing is used, the token also needs customer read access so logged-in customer tags can be checked.
+
+Vercel project setup:
+
+- Framework preset: Next.js
+- Root directory: repository root
+- Build command: default `next build`
+- Install command: default `npm install`
 
 Recommended Admin API scopes:
 
