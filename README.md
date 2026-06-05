@@ -2,6 +2,12 @@
 
 Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
 
+For the full Shopify migration handoff, see:
+
+```text
+https://github.com/adireaudio8/bhs_shopify_theme/blob/main/docs/HANDOFF.md
+```
+
 Standalone app repo:
 
 ```text
@@ -67,6 +73,15 @@ Recommended Admin API scopes:
 ## Checkout behavior
 
 The browser never controls price. The checkout endpoint revalidates the design through `/apps/enclosure-designer/api/design-pricing`, creates a Shopify draft order with a custom-priced line item, then redirects the customer to the draft order invoice URL.
+
+Before switching storefront navigation to this app, test:
+
+- Vercel deployment installs `@adireaudio/enclosure-engine`.
+- App proxy requests pass Shopify signature verification.
+- Supabase pricing returns the expected MAP/dealer values.
+- Logged-in customer tags resolve customer/dealer/distributor tier correctly.
+- Brand logo EPS lookup works or fails gracefully.
+- Draft order checkout URL is created and opens Shopify checkout.
 
 ## Local checks
 
