@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build"
+    "check": "npm run typecheck && npm run build",
+    "shopify:link": "shopify app config link",
+    "shopify:deploy": "shopify app deploy",
+    "shopify:info": "shopify app info"
   },
   "dependencies": {
     "@adireaudio/enclosure-engine": "file:vendor/adireaudio-enclosure-engine-0.0.0.tgz",
@@ -27,6 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.182.0",
+    "@shopify/cli": "4.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

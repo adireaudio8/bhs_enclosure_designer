@@ -1,0 +1,25 @@
+name = "BHS Enclosure Designer"
+client_id = ""
+application_url = "https://bhsenclosuredesigner.vercel.app"
+embedded = false
+handle = "bhs-enclosure-designer"
+
+[build]
+automatically_update_urls_on_dev = false
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+scopes = "read_customers,read_draft_orders,write_draft_orders,write_app_proxy"
+
+[auth]
+redirect_urls = [
+  "https://bhsenclosuredesigner.vercel.app/api/auth/callback",
+  "https://bhsenclosuredesigner.vercel.app/api/auth/oauth/callback"
+]
+
+[app_proxy]
+url = "/apps/enclosure-designer"
+prefix = "apps"
+subpath = "enclosure-designer"
