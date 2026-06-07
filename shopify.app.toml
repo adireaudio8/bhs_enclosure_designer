@@ -1,23 +1,25 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "dc40ef4303322cf5d91cf8eca0802483"
 name = "BHS Enclosure Designer"
-client_id = ""
 application_url = "https://bhsenclosuredesigner.vercel.app"
 embedded = false
-handle = "bhs-enclosure-designer"
-
-[build]
-automatically_update_urls_on_dev = false
 
 [webhooks]
 api_version = "2026-04"
 
 [access_scopes]
-scopes = "read_customers,read_draft_orders,write_draft_orders,write_app_proxy"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_draft_orders,write_app_proxy,write_draft_orders"
 
 [auth]
 redirect_urls = [
   "https://bhsenclosuredesigner.vercel.app/api/auth/callback",
   "https://bhsenclosuredesigner.vercel.app/api/auth/oauth/callback"
 ]
+
+[build]
+automatically_update_urls_on_dev = false
 
 [app_proxy]
 url = "/apps/enclosure-designer"
