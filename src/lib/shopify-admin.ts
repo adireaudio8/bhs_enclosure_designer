@@ -1,6 +1,6 @@
 const SHOP_DOMAIN = process.env.SHOPIFY_SHOP_DOMAIN ?? '';
 const STATIC_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN ?? '';
-const CLIENT_ID = process.env.SHOPIFY_CLIENT_ID ?? '';
+const CLIENT_ID = process.env.SHOPIFY_CLIENT_ID ?? process.env.SHOPIFY_API_KEY ?? '';
 const API_SECRET = process.env.SHOPIFY_API_SECRET ?? '';
 const API_VERSION = process.env.SHOPIFY_ADMIN_API_VERSION ?? '2026-04';
 

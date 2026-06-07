@@ -53,6 +53,7 @@ from the Dev Dashboard:
 
 ```text
 SHOPIFY_CLIENT_ID=
+SHOPIFY_API_KEY=
 SHOPIFY_API_SECRET=
 ```
 
@@ -63,7 +64,7 @@ SHOPIFY_ADMIN_ACCESS_TOKEN=
 ```
 
 When `SHOPIFY_ADMIN_ACCESS_TOKEN` is present, the app uses it directly. When it
-is absent, the app uses `SHOPIFY_CLIENT_ID` and `SHOPIFY_API_SECRET` to request
-and cache an Admin API token server-side.
+is absent, the app uses `SHOPIFY_CLIENT_ID` or `SHOPIFY_API_KEY` plus
+`SHOPIFY_API_SECRET` to request and cache an Admin API token server-side.
 
 After changing Vercel env vars, redeploy the Vercel project.
