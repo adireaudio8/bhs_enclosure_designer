@@ -6,7 +6,10 @@ export const runtime = 'nodejs';
 export function GET(req: Request) {
   const currentUrl = new URL(req.url);
   if (currentUrl.searchParams.get('bhs_debug') === '1') {
-    return renderProxyDebug(req, 'Normal app proxy wrapper route reached Vercel.');
+    return renderProxyDebug(
+      req,
+      'Dedicated Shopify app proxy target reached Vercel.',
+    );
   }
 
   return renderDesignerProxyWrapper(req);

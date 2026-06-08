@@ -22,6 +22,6 @@ redirect_urls = [
 automatically_update_urls_on_dev = false
 
 [app_proxy]
-url = "/apps/enclosure-designer/proxy"
+url = "/shopify/enclosure-designer"
 prefix = "apps"
 subpath = "enclosure-designer"
