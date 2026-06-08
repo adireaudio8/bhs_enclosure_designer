@@ -68,7 +68,12 @@ const APP_PROXY_BASE =
   process.env.NEXT_PUBLIC_APP_PROXY_BASE_PATH || '/apps/enclosure-designer';
 
 function appApi(path: string) {
-  return `${APP_PROXY_BASE}/api/${path.replace(/^\/+/, '')}`;
+  const endpoint = `${APP_PROXY_BASE}/api/${path.replace(/^\/+/, '')}`;
+  if (typeof window === 'undefined' || !window.location.search) {
+    return endpoint;
+  }
+
+  return `${endpoint}${window.location.search}`;
 }
 
 export default function CustomEnclosureDesigner() {
