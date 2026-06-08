@@ -6,10 +6,24 @@ function htmlEscape(value: string) {
     .replace(/>/g, '&gt;');
 }
 
-export function renderDesignerProxyWrapper(req: Request) {
+type ProxyWrapperOptions = {
+  topLevelRedirectPath?: string;
+};
+
+export function renderDesignerProxyWrapper(
+  req: Request,
+  options: ProxyWrapperOptions = {},
+) {
   const currentUrl = new URL(req.url);
   const designerUrl = new URL('/apps/enclosure-designer', currentUrl.origin);
   designerUrl.search = currentUrl.search;
+  const topLevelRedirectScript = options.topLevelRedirectPath
+    ? `<script>
+      if (window.top === window.self) {
+        window.location.replace(${JSON.stringify(options.topLevelRedirectPath)});
+      }
+    </script>`
+    : '';
 
   return new Response(
     `<!doctype html>
@@ -38,6 +52,7 @@ export function renderDesignerProxyWrapper(req: Request) {
         background: #050505;
       }
     </style>
+    ${topLevelRedirectScript}
   </head>
   <body>
     <iframe
