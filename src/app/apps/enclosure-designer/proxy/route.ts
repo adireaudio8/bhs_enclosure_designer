@@ -1,3 +1,5 @@
+import { renderProxyDebug } from '@/lib/proxy-debug';
+
 export const runtime = 'nodejs';
 
 function htmlEscape(value: string) {
@@ -10,6 +12,10 @@ function htmlEscape(value: string) {
 
 export function GET(req: Request) {
   const currentUrl = new URL(req.url);
+  if (currentUrl.searchParams.get('bhs_debug') === '1') {
+    return renderProxyDebug(req, 'Normal app proxy wrapper route reached Vercel.');
+  }
+
   const designerUrl = new URL('/apps/enclosure-designer', currentUrl.origin);
   designerUrl.search = currentUrl.search;
 
