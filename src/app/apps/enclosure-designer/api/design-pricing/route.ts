@@ -252,7 +252,7 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({
-    price: Math.round(tieredPrice),
+    price: Math.round(tieredPrice * 100) / 100,
     leadTimeDays: LEAD_TIME_DAYS,
     baffleStatus,
     priceSource: 'supabase' as const,

@@ -67,6 +67,17 @@ const EnclosureViewer3D = dynamic(
 const APP_PROXY_BASE =
   process.env.NEXT_PUBLIC_APP_PROXY_BASE_PATH || '/apps/enclosure-designer';
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatCurrency(value: number) {
+  return currencyFormatter.format(Number.isFinite(value) ? value : 0);
+}
+
 function appApi(path: string) {
   const endpoint = `${APP_PROXY_BASE}/api/${path.replace(/^\/+/, '')}`;
   if (typeof window === 'undefined' || !window.location.search) {
@@ -890,7 +901,7 @@ export default function CustomEnclosureDesigner() {
               <div className="flex items-baseline justify-between">
                 <span className="text-xs text-neutral-400">Estimated price</span>
                 <span className="font-[family-name:var(--font-display)] text-2xl tracking-wide">
-                  {pricing.status === 'ok' ? `$${pricing.price.toLocaleString()}` :
+                  {pricing.status === 'ok' ? formatCurrency(pricing.price) :
                    pricing.status === 'loading' ? <span className="text-text-muted">…</span> :
                    pricing.status === 'unavailable' ? <span className="text-amber-400 text-sm">contact us</span> :
                    pricing.status === 'error' ? <span className="text-amber-400 text-sm">unavailable</span> :
