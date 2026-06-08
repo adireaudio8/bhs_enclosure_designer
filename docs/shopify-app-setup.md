@@ -37,7 +37,7 @@ Embedded app: false
 Scopes: read_customers, read_draft_orders, write_draft_orders, write_app_proxy
 App proxy prefix: apps
 App proxy subpath: enclosure-designer
-App proxy URL: https://bhsenclosuredesigner.vercel.app/apps/enclosure-designer/proxy
+App proxy URL: /apps/enclosure-designer/proxy
 ```
 
 Shopify should serve the app at:

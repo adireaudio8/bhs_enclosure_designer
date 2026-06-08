@@ -22,6 +22,6 @@ redirect_urls = [
 automatically_update_urls_on_dev = false
 
 [app_proxy]
-url = "https://bhsenclosuredesigner.vercel.app/apps/enclosure-designer/proxy"
+url = "/apps/enclosure-designer/proxy"
 prefix = "apps"
 subpath = "enclosure-designer"
