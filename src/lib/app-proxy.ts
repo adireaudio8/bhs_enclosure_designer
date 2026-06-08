@@ -19,6 +19,12 @@ export function verifyAppProxySignature(url: URL) {
   const secret = process.env.SHOPIFY_API_SECRET;
 
   if (!signature || !secret) {
+    console.warn('[app-proxy-signature] missing signature or secret', {
+      hasSignature: Boolean(signature),
+      hasSecret: Boolean(secret),
+      pathname: url.pathname,
+      queryKeys: [...url.searchParams.keys()].sort(),
+    });
     return process.env.NODE_ENV !== 'production';
   }
 
@@ -40,7 +46,19 @@ export function verifyAppProxySignature(url: URL) {
     .update(sorted)
     .digest('hex');
 
-  return timingSafeHexCompare(signature, calculated);
+  const verified = timingSafeHexCompare(signature, calculated);
+  if (!verified) {
+    console.warn('[app-proxy-signature] signature mismatch', {
+      pathname: url.pathname,
+      queryKeys: [...url.searchParams.keys()].sort(),
+      expectedLength: calculated.length,
+      receivedLength: signature.length,
+      receivedPrefix: signature.slice(0, 8),
+      calculatedPrefix: calculated.slice(0, 8),
+    });
+  }
+
+  return verified;
 }
 
 export function getAppProxyContext(request: Request): AppProxyContext {
