@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
-import type { EnclosureInputs } from '@adireaudio/enclosure-engine';
+import {
+  calculateEnclosure,
+  resolveTerminalPanel,
+  resolveWindowDimensions,
+  resolveWindowPanel,
+  type EnclosureInputs,
+} from '@adireaudio/enclosure-engine';
 import { getAppProxyContext } from '@/lib/app-proxy';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 
@@ -44,6 +50,26 @@ function attr(key: string, value: unknown) {
 function estimateShippingWeightPounds(specs: DesignSpecs) {
   const externalVolumeCuFt = (specs.boxWidth * specs.boxHeight * specs.boxDepth) / 1728;
   return Math.max(35, Math.round(externalVolumeCuFt * 32));
+}
+
+function round(value: unknown, digits = 2) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  const multiplier = Math.pow(10, digits);
+  return Math.round(number * multiplier) / multiplier;
+}
+
+function inch(value: unknown, digits = 2) {
+  return `${round(value, digits)}"`;
+}
+
+function signedInch(value: unknown, digits = 3) {
+  const rounded = round(value, digits);
+  return `${rounded > 0 ? '+' : ''}${rounded}"`;
+}
+
+function yesNo(value: unknown) {
+  return value ? 'Yes' : 'No';
 }
 
 async function validatePrice(req: Request, inputs: EnclosureInputs) {
@@ -109,6 +135,32 @@ export async function POST(req: Request) {
   }
 
   const specs = body.designSpecs;
+  let calculations;
+  try {
+    calculations = calculateEnclosure(body.inputs);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Build calculations failed.' },
+      { status: 422 },
+    );
+  }
+
+  const inputs = body.inputs;
+  const estimatedWeightPounds = estimateShippingWeightPounds(specs);
+  const terminalPanel = resolveTerminalPanel(inputs);
+  const terminalCustomized =
+    inputs.terminalPanel !== undefined || inputs.terminalXOffset !== undefined;
+  const windowEnabled = !!inputs.windowEnabled;
+  const windowPanel = windowEnabled ? resolveWindowPanel(inputs) : 'None';
+  const windowDimensions = windowEnabled
+    ? resolveWindowDimensions(inputs)
+    : { plateW: 0, plateH: 0, cutoutW: 0, cutoutH: 0 };
+  const windowSize = windowEnabled
+    ? inputs.windowSize === 'custom'
+      ? `${inch(inputs.windowCustomWidth)} x ${inch(inputs.windowCustomHeight)} custom`
+      : `${inputs.windowSize ?? '12x12'} ${inputs.windowOrientation ?? 'landscape'}`
+    : 'None';
+
   const designSummary = [
     `${specs.quantity} ${specs.size} custom enclosure`,
     specs.brand ? specs.brand : null,
@@ -120,21 +172,69 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join(' | ');
 
+  const productionDetails = [
+    `Production build details`,
+    `Brand/model: ${specs.brand || 'Not specified'} ${specs.model || ''}`.trim(),
+    `Configuration: ${specs.configuration}`,
+    `Build type: ${inputs.enclosureType} (${specs.duty})`,
+    `Sub qty/size: ${specs.quantity} ${specs.size}`,
+    `Port qty: ${inputs.portQuantity}`,
+    `External dims: ${inch(specs.boxWidth)} W x ${inch(specs.boxHeight)} H x ${inch(specs.boxDepth)} D`,
+    `Internal dims: ${inch(calculations.internalWidth)} W x ${inch(calculations.internalHeight)} H x ${inch(calculations.internalDepthWithDB)} D`,
+    `Net airspace: ${round(specs.internalVolume, 3)} cu ft (${round(calculations.netAirSpacePerChamber, 3)} cu ft/chamber)`,
+    `Tuning: ${round(specs.tuningFreq, 1)} Hz`,
+    `Port: width ${inch(inputs.portWidth)}, height ${inch(calculations.portHeight)}, area ${round(calculations.portArea, 2)} sq in, port/cube ${round(calculations.sqInPerCube, 2)}, L1 ${inch(calculations.portLength1)}, L2 ${inch(calculations.portLength2)}`,
+    `Sub cutout: ${inch(inputs.subCutoutDiameter)}; outside diameter: ${inch(inputs.outsideDiameter)}; displacement: ${round(inputs.subDisplacement, 3)} cu ft`,
+    `Baffle fit: ${calculations.baffleCheck.status}; edge clearance ${inch(calculations.baffleCheck.edgeClearance)}; sub-to-sub gap ${inch(calculations.baffleCheck.subToSubGap)}`,
+    `Flush mount: ${yesNo(inputs.recessedMounting)}`,
+    `Terminal cup: ${terminalPanel}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; Y fixed 2.125" from panel bottom`,
+    `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
+    `Pricing tier: ${validated.tier}`,
+    `Lead time: ${validated.leadTimeDays} days`,
+    `Estimated shipping weight: ${estimatedWeightPounds} lb`,
+  ].join('\n');
+
   const lineAttributes = [
     attr('Subwoofer brand', specs.brand),
     attr('Subwoofer model', specs.model),
     attr('Subwoofer size', specs.size),
     attr('Subwoofer quantity', specs.quantity),
     attr('Configuration', specs.configuration),
+    attr('Enclosure type', inputs.enclosureType),
+    attr('Assembly method', inputs.assemblyMethod),
     attr('Duty', specs.duty),
+    attr('Port quantity', inputs.portQuantity),
     attr('External width', `${specs.boxWidth}"`),
     attr('External height', `${specs.boxHeight}"`),
     attr('External depth', `${specs.boxDepth}"`),
+    attr('Internal width', inch(calculations.internalWidth)),
+    attr('Internal height', inch(calculations.internalHeight)),
+    attr('Internal depth', inch(calculations.internalDepthWithDB)),
     attr('Net airspace', `${specs.internalVolume} cu ft`),
+    attr('Net airspace per chamber', `${round(calculations.netAirSpacePerChamber, 3)} cu ft`),
     attr('Tuning', `${specs.tuningFreq} Hz`),
+    attr('Port width', inch(inputs.portWidth)),
+    attr('Port height', inch(calculations.portHeight)),
     attr('Port area', `${specs.portArea} sq in`),
+    attr('Port length 1', inch(calculations.portLength1)),
+    attr('Port length 2', inch(calculations.portLength2)),
+    attr('Port area per cube', `${round(calculations.sqInPerCube, 2)} sq in/cu ft`),
+    attr('Sub cutout diameter', inch(inputs.subCutoutDiameter)),
+    attr('Sub outside diameter', inch(inputs.outsideDiameter)),
+    attr('Sub displacement', `${round(inputs.subDisplacement, 3)} cu ft`),
+    attr('Baffle fit', calculations.baffleCheck.status),
+    attr('Baffle edge clearance', inch(calculations.baffleCheck.edgeClearance)),
+    attr('Sub-to-sub gap', inch(calculations.baffleCheck.subToSubGap)),
     attr('Flush mount', specs.flushMount ? 'Yes' : 'No'),
-    attr('Plexi window', specs.plexiWindow || 'None'),
+    attr('Terminal cup panel', terminalPanel),
+    attr('Terminal cup placement', terminalCustomized ? `X ${signedInch(inputs.terminalXOffset ?? 0)}, Y 2.125"` : 'Default'),
+    attr('Plexi window', windowEnabled ? windowSize : 'None'),
+    attr('Plexi window panel', windowPanel),
+    attr('Plexi plate size', windowEnabled ? `${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}` : 'None'),
+    attr('Plexi cutout size', windowEnabled ? `${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}` : 'None'),
+    attr('Plexi offset', windowEnabled ? `X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}` : 'None'),
+    attr('Plexi corner radius', windowEnabled ? inch(inputs.windowCornerRadius ?? 0.125, 3) : 'None'),
+    attr('Estimated shipping weight', `${estimatedWeightPounds} lb`),
     attr('Pricing tier', validated.tier),
   ];
 
@@ -161,7 +261,7 @@ export async function POST(req: Request) {
       }`,
       {
         input: {
-          note: `Custom enclosure designer request: ${designSummary}`,
+          note: `Custom enclosure designer request: ${designSummary}\n\n${productionDetails}`,
           tags: ['custom-enclosure', 'enclosure-designer'],
           visibleToCustomer: true,
           acceptAutomaticDiscounts: false,
@@ -185,7 +285,7 @@ export async function POST(req: Request) {
                 currencyCode: 'USD',
               },
               weight: {
-                value: estimateShippingWeightPounds(specs),
+                value: estimatedWeightPounds,
                 unit: 'POUNDS',
               },
               customAttributes: lineAttributes,
