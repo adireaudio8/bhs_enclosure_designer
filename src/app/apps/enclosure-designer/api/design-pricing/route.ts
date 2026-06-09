@@ -25,7 +25,15 @@
 import { NextResponse } from 'next/server';
 import {
   calculateEnclosure,
+  DEFAULT_PRICING_MODIFIERS,
+  detectMaterial,
+  generateModelNumber,
+  migrateFromLegacyDiscounts,
+  parsePricingModifiers,
+  resolveModifiedMAP,
   type EnclosureInputs,
+  type PricingModifiersConfig,
+  type ResolveModifiedMAPResult,
 } from '@adireaudio/enclosure-engine';
 import {
   dutyKeyFromEnclosureType,
@@ -49,6 +57,11 @@ interface PricingRow {
   map_price: number;
   dealer_price: number | null;
   build_type: string;
+}
+
+interface AppSettingRow {
+  key: string;
+  value: string;
 }
 
 /**
@@ -142,6 +155,44 @@ async function lookupSupabasePriceRow(
   return rows[rows.length - 1] ?? null;
 }
 
+async function lookupPricingModifierConfig(): Promise<PricingModifiersConfig> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return DEFAULT_PRICING_MODIFIERS;
+
+  const url =
+    `${SUPABASE_URL}/rest/v1/app_settings` +
+    `?select=key,value` +
+    `&key=in.(pricing_modifiers,flat_pack_discount_percent,foundation_discount_percent)`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.warn('[design-pricing] app_settings lookup failed:', res.status);
+      return DEFAULT_PRICING_MODIFIERS;
+    }
+
+    const rows = (await res.json()) as AppSettingRow[];
+    const settings: Record<string, string> = {};
+    for (const row of rows) settings[row.key] = row.value;
+
+    if (settings.pricing_modifiers) {
+      return parsePricingModifiers(settings.pricing_modifiers);
+    }
+
+    const legacyFlatPack = Number.parseFloat(settings.flat_pack_discount_percent || '25') || 25;
+    const legacyFoundation = Number.parseFloat(settings.foundation_discount_percent || '30') || 30;
+    return migrateFromLegacyDiscounts(legacyFlatPack, legacyFoundation);
+  } catch (err) {
+    console.warn('[design-pricing] app_settings fetch error:', err);
+    return DEFAULT_PRICING_MODIFIERS;
+  }
+}
+
 /**
  * Pick the right price column for the visitor's tier:
  *   - dealer / distributor → dealer_price column (wholesale)
@@ -153,13 +204,28 @@ async function lookupSupabasePriceRow(
  * Returns null if the row is missing the required column for the tier
  * (e.g. dealer asked for a row whose dealer_price wasn't populated).
  */
-function priceForTier(row: PricingRow, tier: PricingTier): number | null {
-  if (tier === 'dealer' || tier === 'distributor') {
-    const dealer = Number(row.dealer_price);
-    return dealer > 0 ? dealer : null;
+function priceForTier(
+  row: PricingRow,
+  tier: PricingTier,
+  modified: ResolveModifiedMAPResult,
+): number | null {
+  const baseMap = Number(row.map_price);
+  const finalMap = Number(modified.finalMap);
+  if (!Number.isFinite(baseMap) || baseMap <= 0 || !Number.isFinite(finalMap) || finalMap <= 0) {
+    return null;
   }
-  const map = Number(row.map_price);
-  return map > 0 ? map : null;
+
+  if (tier === 'dealer' || tier === 'distributor') {
+    const baseDealer = Number(row.dealer_price);
+    if (!Number.isFinite(baseDealer) || baseDealer <= 0) return null;
+
+    // Preserve the exact Supabase dealer base that is already live, then apply
+    // modifier deltas at the same 60%-of-MAP dealer rule the calculator uses.
+    const mapDelta = finalMap - baseMap;
+    return Math.round((baseDealer + mapDelta * 0.6) * 100) / 100;
+  }
+
+  return finalMap;
 }
 
 export async function POST(req: Request) {
@@ -211,6 +277,7 @@ export async function POST(req: Request) {
   let baffleStatus: string;
   let row: PricingRow | null;
   let tier: PricingTier;
+  let modifiedPrice: ResolveModifiedMAPResult | null = null;
   try {
     const calc = calculateEnclosure(inputs);
     baffleStatus = calc.baffleCheck.status;
@@ -218,14 +285,30 @@ export async function POST(req: Request) {
     const dutyKey = dutyKeyFromEnclosureType(inputs.enclosureType);
     const customerVolume = Number(inputs.netAirSpace) || 0;
 
-    [tier, row] = await Promise.all([
+    const [resolvedTier, resolvedRow, modifiers] = await Promise.all([
       lookupPricingTier(proxyContext),
       lookupSupabasePriceRow(
         inputs.size as SupportedSize,
         dutyKey,
         customerVolume,
       ),
+      lookupPricingModifierConfig(),
     ]);
+    tier = resolvedTier;
+    row = resolvedRow;
+
+    if (row) {
+      const designName = generateModelNumber(inputs);
+      const size = String(inputs.size).replace(/"/g, '').replace(/”/g, '').trim();
+      modifiedPrice = resolveModifiedMAP({
+        designName,
+        size,
+        baseMap: Number(row.map_price),
+        modifiers,
+        inputs: inputs as unknown as Record<string, unknown>,
+        material: detectMaterial(inputs.enclosureType),
+      });
+    }
   } catch (err) {
     console.error('[design-pricing] computation failed:', err);
     return NextResponse.json(
@@ -234,7 +317,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const tieredPrice = row ? priceForTier(row, tier) : null;
+  const tieredPrice = row && modifiedPrice ? priceForTier(row, tier, modifiedPrice) : null;
 
   // No price available → tell the client explicitly so the UI can show a
   // "contact us" CTA instead of inventing a number. Baffle status is still
@@ -256,6 +339,8 @@ export async function POST(req: Request) {
     leadTimeDays: LEAD_TIME_DAYS,
     baffleStatus,
     priceSource: 'supabase' as const,
+    appliedModifiers: modifiedPrice?.applied ?? [],
+    modifierBreakdown: modifiedPrice?.breakdown ?? [],
     tier, // 'guest' | 'customer' | 'dealer' | 'distributor' — UI shows badge
   });
 }

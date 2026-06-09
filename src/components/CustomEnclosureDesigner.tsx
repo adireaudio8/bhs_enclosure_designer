@@ -33,9 +33,14 @@ import {
   SUBWOOFER_QUANTITIES,
   PORT_QUANTITIES,
   checkTerminalPlacement,
+  checkWindowPlacement,
+  findNearestSafeWindowOffsets,
   findNearestSafeXOffset,
   panelWidthInches,
+  resolveDefaultWindowOffsets,
   resolveTerminalPanel,
+  resolveWindowDimensions,
+  resolveWindowPanel,
   SAFETY_BORDER,
   TERMINAL_HALF_WIDTH,
 } from '@adireaudio/enclosure-engine';
@@ -86,6 +91,9 @@ function appApi(path: string) {
 
   return `${endpoint}${window.location.search}`;
 }
+
+type WindowSizeOption = '12x12' | '24x12';
+type WindowOrientationOption = 'landscape' | 'portrait';
 
 export default function CustomEnclosureDesigner() {
   const inputs = useEnclosureStore((s) => s.inputs);
@@ -353,6 +361,93 @@ export default function CustomEnclosureDesigner() {
     }
   }
 
+  // Plexi/acrylic window placement. The engine chooses the host panel from
+  // the enclosure configuration, then validates offsets against that panel's
+  // safe area so the customer can tweak position without exposing cut data.
+  const windowEnabled = !!inputs.windowEnabled;
+  const currentWindowSize: WindowSizeOption =
+    inputs.windowSize === '24x12' ? '24x12' : '12x12';
+  const currentWindowOrientation: WindowOrientationOption =
+    inputs.windowOrientation === 'portrait' ? 'portrait' : 'landscape';
+  const windowPanel = resolveWindowPanel(inputs);
+  const windowPlacementCheck = windowEnabled
+    ? checkWindowPlacement(inputs, calculations, undefined, undefined, cutList)
+    : null;
+  const windowDimensions = windowPlacementCheck?.dimensions ?? resolveWindowDimensions({
+    ...inputs,
+    windowEnabled: true,
+    windowSize: currentWindowSize,
+    windowOrientation: currentWindowOrientation,
+  });
+  const windowRange = windowPlacementCheck?.range;
+
+  function roundToEighth(value: number) {
+    return Math.round(value / 0.125) * 0.125;
+  }
+
+  function roundOffset(value: number) {
+    return Math.round(value * 1000) / 1000;
+  }
+
+  function setWindowDefaults(
+    size: WindowSizeOption = currentWindowSize,
+    orientation: WindowOrientationOption = currentWindowOrientation,
+  ) {
+    const nextInputs = {
+      ...inputs,
+      windowEnabled: true,
+      windowSize: size,
+      windowOrientation: orientation,
+      windowCornerRadius: inputs.windowCornerRadius ?? 0.125,
+    };
+    const offsets = resolveDefaultWindowOffsets(nextInputs, calculations, cutList);
+    setInputs({
+      windowEnabled: true,
+      windowSize: size,
+      windowOrientation: orientation,
+      windowXOffset: roundOffset(offsets.x),
+      windowYOffset: roundOffset(offsets.y),
+      windowCornerRadius: nextInputs.windowCornerRadius,
+    });
+  }
+
+  function handleWindowEnable(enabled: boolean) {
+    setHasInteracted(true);
+    if (enabled) {
+      setWindowDefaults();
+      return;
+    }
+
+    setInputs({
+      windowEnabled: undefined,
+      windowSize: undefined,
+      windowOrientation: undefined,
+      windowCustomWidth: undefined,
+      windowCustomHeight: undefined,
+      windowXOffset: undefined,
+      windowYOffset: undefined,
+      windowCornerRadius: undefined,
+    });
+  }
+
+  function handleWindowSnap() {
+    const safe = findNearestSafeWindowOffsets(
+      inputs,
+      calculations,
+      {
+        x: inputs.windowXOffset ?? 0,
+        y: inputs.windowYOffset ?? 0,
+      },
+      cutList,
+    );
+    if (safe) {
+      setInputs({
+        windowXOffset: roundOffset(safe.x),
+        windowYOffset: roundOffset(safe.y),
+      });
+    }
+  }
+
   // ─── Logo fetch on brand change ───────────────────────────────────────
   // 3D viewer auto-renders the logo (debossed on the baffle) when both
   // selectedLogoName and logoEpsContent are set. We just have to fetch
@@ -423,6 +518,10 @@ export default function CustomEnclosureDesigner() {
       internalVolume: round(inputs.netAirSpace, 2),
       tuningFreq: round(inputs.tuningFrequency, 0),
       portArea: round(calculations.portArea, 1),
+      flushMount: !!inputs.recessedMounting,
+      plexiWindow: inputs.windowEnabled
+        ? `${inputs.windowSize ?? '12x12'} ${inputs.windowOrientation ?? 'landscape'} on ${resolveWindowPanel(inputs)}`
+        : 'None',
     };
 
     // Fire the standard "AddToCart" event BEFORE the API call so we
@@ -778,6 +877,126 @@ export default function CustomEnclosureDesigner() {
                   </label>
                 );
               })()}
+            </section>
+
+          <section className="bg-neutral-900 border border-neutral-800 rounded-lg p-3">
+            <div className="flex items-baseline justify-between mb-2">
+              <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                Plexi Window
+              </h2>
+              <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={windowEnabled}
+                  onChange={(e) => handleWindowEnable(e.target.checked)}
+                  className="accent-red-600"
+                />
+                Add
+              </label>
+            </div>
+            {!windowEnabled ? (
+              <p className="text-[11px] text-text-muted">
+                Optional clear acrylic window. Adds cost.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <Field label="Size">
+                    <select
+                      className="select-base"
+                      value={currentWindowSize}
+                      onChange={(e) => {
+                        setHasInteracted(true);
+                        setWindowDefaults(e.target.value as WindowSizeOption, currentWindowOrientation);
+                      }}
+                    >
+                      <option value="12x12">12&quot; x 12&quot;</option>
+                      <option value="24x12">24&quot; x 12&quot;</option>
+                    </select>
+                  </Field>
+                  <Field label="Orientation">
+                    <select
+                      className="select-base"
+                      value={currentWindowOrientation}
+                      disabled={currentWindowSize === '12x12'}
+                      onChange={(e) => {
+                        setHasInteracted(true);
+                        setWindowDefaults(currentWindowSize, e.target.value as WindowOrientationOption);
+                      }}
+                    >
+                      <option value="landscape">Landscape</option>
+                      <option value="portrait">Portrait</option>
+                    </select>
+                  </Field>
+                  <Field label="Panel" className="col-span-2 sm:col-span-1">
+                    <ReadOnlyInput value={windowPanel} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Field
+                    label={`X offset${windowRange
+                      ? ` (${windowRange.xMin.toFixed(2)} to ${windowRange.xMax.toFixed(2)})`
+                      : ''}`}
+                  >
+                    <NumberInput
+                      value={inputs.windowXOffset ?? 0}
+                      onChange={(v) => {
+                        setHasInteracted(true);
+                        const snapped = roundToEighth(v);
+                        const clamped = windowRange
+                          ? Math.max(windowRange.xMin, Math.min(windowRange.xMax, snapped))
+                          : snapped;
+                        setInputs({ windowXOffset: roundOffset(clamped) });
+                      }}
+                      min={windowRange?.xMin}
+                      max={windowRange?.xMax}
+                      step={0.125}
+                    />
+                  </Field>
+                  <Field
+                    label={`Y offset${windowRange
+                      ? ` (${windowRange.yMin.toFixed(2)} to ${windowRange.yMax.toFixed(2)})`
+                      : ''}`}
+                  >
+                    <NumberInput
+                      value={inputs.windowYOffset ?? 0}
+                      onChange={(v) => {
+                        setHasInteracted(true);
+                        const snapped = roundToEighth(v);
+                        const clamped = windowRange
+                          ? Math.max(windowRange.yMin, Math.min(windowRange.yMax, snapped))
+                          : snapped;
+                        setInputs({ windowYOffset: roundOffset(clamped) });
+                      }}
+                      min={windowRange?.yMin}
+                      max={windowRange?.yMax}
+                      step={0.125}
+                    />
+                  </Field>
+                </div>
+                <p className="mt-1 text-[11px] text-text-muted">
+                  Plate: {round(windowDimensions.plateW, 2)}&quot; x {round(windowDimensions.plateH, 2)}&quot;.
+                  Cutout: {round(windowDimensions.cutoutW, 2)}&quot; x {round(windowDimensions.cutoutH, 2)}&quot;.
+                </p>
+                {windowPlacementCheck?.shrunk && (
+                  <p className="mt-1 text-[11px] text-amber-300/80">
+                    Window plate auto-fitted to the safe area for this enclosure.
+                  </p>
+                )}
+                {windowPlacementCheck && !windowPlacementCheck.safe && (
+                  <div className="mt-2 flex items-center justify-between gap-2 p-2 bg-red-950/40 border border-red-900/60 rounded text-[11px] text-red-300">
+                    <span>{windowPlacementCheck.conflict?.label ?? 'Window is outside the safe area.'}</span>
+                    <button
+                      type="button"
+                      onClick={handleWindowSnap}
+                      className="px-2 py-1 rounded bg-red-700 hover:bg-red-600 text-white whitespace-nowrap text-[11px]"
+                    >
+                      Snap to safe
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
             </section>
 
           {/* Terminal cup placement — sits ABOVE the Price/ATC block so

@@ -18,6 +18,8 @@ interface DesignSpecs {
   internalVolume: number;
   tuningFreq: number;
   portArea: number;
+  flushMount?: boolean;
+  plexiWindow?: string;
 }
 
 interface CheckoutRequest {
@@ -131,6 +133,8 @@ export async function POST(req: Request) {
     attr('Net airspace', `${specs.internalVolume} cu ft`),
     attr('Tuning', `${specs.tuningFreq} Hz`),
     attr('Port area', `${specs.portArea} sq in`),
+    attr('Flush mount', specs.flushMount ? 'Yes' : 'No'),
+    attr('Plexi window', specs.plexiWindow || 'None'),
     attr('Pricing tier', validated.tier),
   ];
 
