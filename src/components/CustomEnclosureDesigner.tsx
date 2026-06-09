@@ -71,6 +71,7 @@ const EnclosureViewer3D = dynamic(
 
 const APP_PROXY_BASE =
   process.env.NEXT_PUBLIC_APP_PROXY_BASE_PATH || '/apps/enclosure-designer';
+const TOP_NAVIGATION_MESSAGE = 'bhs:navigate-top';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -90,6 +91,34 @@ function appApi(path: string) {
   }
 
   return `${endpoint}${window.location.search}`;
+}
+
+function navigateToCheckout(checkoutUrl: string) {
+  if (typeof window === 'undefined') return;
+
+  const message = {
+    type: TOP_NAVIGATION_MESSAGE,
+    url: checkoutUrl,
+  };
+
+  try {
+    if (window.parent && window.parent !== window.self) {
+      window.parent.postMessage(message, '*');
+    }
+  } catch {
+    // Fall through to direct navigation below.
+  }
+
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.assign(checkoutUrl);
+      return;
+    }
+  } catch {
+    // Cross-origin frame rules may block this; the proxy wrapper listener handles it.
+  }
+
+  window.location.assign(checkoutUrl);
 }
 
 type WindowSizeOption = '12x12' | '24x12';
@@ -557,7 +586,7 @@ export default function CustomEnclosureDesigner() {
       trackDesignerInitiateCheckout({ price: pricing.price });
       setCartState({ status: 'idle' });
       if (data.checkoutUrl) {
-        window.location.assign(data.checkoutUrl);
+        navigateToCheckout(data.checkoutUrl);
       } else {
         router.push('/cart');
       }

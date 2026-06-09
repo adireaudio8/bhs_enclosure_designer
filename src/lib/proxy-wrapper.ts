@@ -17,6 +17,38 @@ export function renderDesignerProxyWrapper(
   const currentUrl = new URL(req.url);
   const designerUrl = new URL('/apps/enclosure-designer', currentUrl.origin);
   designerUrl.search = currentUrl.search;
+  const checkoutNavigationScript = `<script>
+      (function() {
+        var designerOrigin = ${JSON.stringify(designerUrl.origin)};
+        function checkoutUrl(value) {
+          try {
+            var target = new URL(value);
+            if (target.protocol !== 'https:') return null;
+            if (
+              target.hostname === 'bassheadsupply.com' ||
+              target.hostname === 'www.bassheadsupply.com' ||
+              target.hostname === 'shopify.com' ||
+              target.hostname.endsWith('.myshopify.com') ||
+              target.hostname.endsWith('.shopify.com')
+            ) {
+              return target.href;
+            }
+          } catch (error) {
+            return null;
+          }
+          return null;
+        }
+
+        window.addEventListener('message', function(event) {
+          if (event.origin !== designerOrigin) return;
+          var data = event.data || {};
+          if (data.type !== 'bhs:navigate-top' || typeof data.url !== 'string') return;
+          var target = checkoutUrl(data.url);
+          if (!target) return;
+          window.top.location.assign(target);
+        });
+      })();
+    </script>`;
   const topLevelRedirectScript = options.topLevelRedirectPath
     ? `<script>
       if (window.top === window.self) {
@@ -52,6 +84,7 @@ export function renderDesignerProxyWrapper(
         background: #050505;
       }
     </style>
+    ${checkoutNavigationScript}
     ${topLevelRedirectScript}
   </head>
   <body>
