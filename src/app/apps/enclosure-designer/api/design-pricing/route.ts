@@ -181,7 +181,7 @@ async function lookupPricingModifierConfig(): Promise<PricingModifiersConfig> {
     for (const row of rows) settings[row.key] = row.value;
 
     if (settings.pricing_modifiers) {
-      return parsePricingModifiers(settings.pricing_modifiers);
+      return mergePricingModifiersWithDefaults(parsePricingModifiers(settings.pricing_modifiers));
     }
 
     const legacyFlatPack = Number.parseFloat(settings.flat_pack_discount_percent || '25') || 25;
@@ -191,6 +191,23 @@ async function lookupPricingModifierConfig(): Promise<PricingModifiersConfig> {
     console.warn('[design-pricing] app_settings fetch error:', err);
     return DEFAULT_PRICING_MODIFIERS;
   }
+}
+
+function mergePricingModifiersWithDefaults(
+  config: PricingModifiersConfig,
+): PricingModifiersConfig {
+  const storedById = new Map(config.modifiers.map((modifier) => [modifier.id, modifier]));
+  const defaultIds = new Set(DEFAULT_PRICING_MODIFIERS.modifiers.map((modifier) => modifier.id));
+  const mergedDefaults = DEFAULT_PRICING_MODIFIERS.modifiers.map(
+    (modifier) => storedById.get(modifier.id) ?? modifier,
+  );
+  const customModifiers = config.modifiers.filter((modifier) => !defaultIds.has(modifier.id));
+
+  return {
+    ...config,
+    version: Math.max(config.version || 1, DEFAULT_PRICING_MODIFIERS.version),
+    modifiers: [...mergedDefaults, ...customModifiers],
+  };
 }
 
 /**
