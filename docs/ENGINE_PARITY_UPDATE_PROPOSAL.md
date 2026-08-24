@@ -86,6 +86,10 @@ Recommended website changes:
 - retain the full input snapshot so production can deterministically recalculate the design;
 - verify pricing and checkout still fail closed if no valid price exists.
 
+**Completed 2026-08-24:** commit `f609b6d` adds a customer-safe “Extended port routing active” notice only when the shared engine automatically selects the multi-fold layout. The storefront does not expose the internal reason, panel dimensions, cut list, or manual `forceLabyrinthPort` control. Both pricing and checkout now force that manual override off at the customer boundary, including for crafted requests. The private `bhs_build.production_details` and `bhs_build.production_snapshot` metafields record the automatic active state and fold count, while the existing full sanitized input snapshot remains intact.
+
+Validation passed: the engine's seven labyrinth regression tests passed; the designer typecheck and production build passed; a normal live 12-inch design showed no indicator; and a live Single 6.5-inch Birch RD automatic-routing design showed the indicator, returned `$354.99`, and enabled checkout. A crafted `forceLabyrinthPort=true` pricing request produced the same authoritative `$535.99` result and baffle status as `false`, proving the override is ignored. An unsupported 21-inch request returned HTTP `503` with `priceUnavailable: true`. Checkout was not clicked, so no Shopify draft order was created. Production deployment `dpl_12k4XcgNBBYQdr1iZoi3GBcFxSZE` reached `READY`.
+
 ### 4. Record engine provenance on every custom order
 
 Add a committed designer provenance file, for example `vendor/enclosure-engine.commit`, containing the full engine SHA. The engine-sync command should update it automatically. Include that revision in the private production snapshot/metafield so every custom order can be traced to the exact geometry engine that priced and rendered it.
@@ -195,9 +199,10 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
 
 1. Complete: Phase 1 package parity was committed as `14842b9` and deployed to production as `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B`.
 2. Complete: MDF flush plus 6.5-inch customer support was committed as `f44d9bd` and deployed to production as `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E`.
-3. Add engine provenance and automated parity verification.
-4. Complete for items 1-2: review the full diff and test evidence.
-5. Complete for Phase 1: commit and push the designer update to `main`.
-6. Complete for Phase 1: deploy production Vercel.
-7. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, and MDF flush regressions passed. Only with explicit approval, create one controlled Shopify test draft order.
-8. Complete for the engine package: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`. Per-order engine provenance remains a Phase 2/3 improvement.
+3. Complete: the customer-safe automatic labyrinth indicator and private production fields were committed as `f609b6d` and deployed to production as `dpl_12k4XcgNBBYQdr1iZoi3GBcFxSZE`.
+4. Next: add engine provenance and automated parity verification.
+5. Complete for items 1-3: review the full diff and test evidence.
+6. Complete for Phase 1 and items 1-3: commit and push the designer updates to `main`.
+7. Complete for Phase 1 and items 1-3: deploy production Vercel.
+8. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, MDF flush, automatic labyrinth, manual-override boundary, and unavailable-price regressions passed. Only with explicit approval, create one controlled Shopify test draft order to inspect the resulting private metafields.
+9. Complete for the engine package: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`. Per-order engine provenance remains a Phase 2/3 improvement.
