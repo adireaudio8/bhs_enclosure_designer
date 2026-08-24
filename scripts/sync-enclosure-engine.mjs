@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmCli = process.env.npm_execpath;
 
 function fail(message) {
   throw new Error(`[engine-sync] ${message}`);
@@ -38,10 +38,20 @@ function run(command, args, cwd, capture = false) {
     encoding: 'utf8',
     stdio: capture ? 'pipe' : 'inherit',
   });
+  if (result.error) {
+    fail(`${command} could not start: ${result.error.message}`);
+  }
   if (result.status !== 0) {
     fail(`${command} ${args.join(' ')} failed${capture ? `: ${result.stderr || result.stdout}` : '.'}`);
   }
   return capture ? result.stdout.trim() : '';
+}
+
+function runNpm(args, cwd) {
+  if (!npmCli) {
+    fail('npm_execpath is unavailable; run this command through npm run sync:engine.');
+  }
+  return run(process.execPath, [npmCli, ...args], cwd);
 }
 
 const engineRepoArgument = optionValue('--engine-repo');
@@ -81,7 +91,7 @@ try {
   const checkedOutRevision = run('git', ['-C', cleanWorktree, 'rev-parse', 'HEAD'], root, true).toLowerCase();
   if (checkedOutRevision !== revisionArgument) fail('Temporary engine checkout is not on the requested SHA.');
 
-  run(npmCommand, ['pack', '--pack-destination', packDirectory], cleanWorktree);
+  runNpm(['pack', '--pack-destination', packDirectory], cleanWorktree);
   const archives = readdirSync(packDirectory).filter((file) => file.endsWith('.tgz'));
   if (archives.length !== 1) fail(`Expected one packed engine archive, found ${archives.length}.`);
 
@@ -93,18 +103,16 @@ try {
   writeFileSync(join(root, 'vendor', 'enclosure-engine.commit'), `${revisionArgument}\n`, 'utf8');
   writeFileSync(join(root, 'vendor', 'enclosure-engine.sha256'), `${tarballSha256}\n`, 'utf8');
 
-  run(
-    npmCommand,
+  runNpm(
     ['install', '@adireaudio/enclosure-engine@file:vendor/adireaudio-enclosure-engine-0.0.0.tgz'],
     root,
   );
-  run(
-    npmCommand,
+  runNpm(
     ['run', 'verify:engine-parity', '--', '--calculator-package', calculatorPackagePath],
     root,
   );
-  run(npmCommand, ['run', 'typecheck'], root);
-  run(npmCommand, ['run', 'build'], root);
+  runNpm(['run', 'typecheck'], root);
+  runNpm(['run', 'build'], root);
 
   console.log(`[engine-sync] Website engine updated and verified at ${revisionArgument}.`);
 } finally {

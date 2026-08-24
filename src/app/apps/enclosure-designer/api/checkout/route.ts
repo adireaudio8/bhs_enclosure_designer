@@ -7,6 +7,10 @@ import {
   type EnclosureInputs,
 } from '@adireaudio/enclosure-engine';
 import { getAppProxyContext } from '@/lib/app-proxy';
+import {
+  resolvePositiveOnlinePrice,
+  sanitizeCustomerEnclosureInputs,
+} from '@/lib/customer-enclosure-boundary';
 import { getEnclosureEngineRevision } from '@/lib/enclosure-engine-provenance';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 
@@ -90,8 +94,8 @@ async function validatePrice(req: Request, inputs: EnclosureInputs) {
     throw new Error(data.error ?? `Pricing validation failed (${res.status})`);
   }
 
-  const price = Number(data.price);
-  if (!Number.isFinite(price) || price <= 0) {
+  const price = resolvePositiveOnlinePrice(data.price);
+  if (price === null) {
     throw new Error('Pricing validation returned an invalid price.');
   }
 
@@ -128,10 +132,7 @@ export async function POST(req: Request) {
   // Keep the internal-only manual labyrinth override outside the customer
   // boundary. The engine can still activate the layout automatically when
   // the submitted geometry requires it.
-  const inputs: EnclosureInputs = {
-    ...body.inputs,
-    forceLabyrinthPort: false,
-  };
+  const inputs = sanitizeCustomerEnclosureInputs(body.inputs);
   const engineRevision = getEnclosureEngineRevision();
 
   let validated;

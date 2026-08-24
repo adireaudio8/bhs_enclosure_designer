@@ -40,6 +40,10 @@ import {
   type SupportedSize,
 } from '@/lib/subwoofer-presets';
 import { getAppProxyContext, type AppProxyContext } from '@/lib/app-proxy';
+import {
+  resolvePositiveOnlinePrice,
+  sanitizeCustomerEnclosureInputs,
+} from '@/lib/customer-enclosure-boundary';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 
 export const runtime = 'nodejs';
@@ -267,7 +271,7 @@ export async function POST(req: Request) {
   // Automatic labyrinth routing is part of the shared geometry engine, but
   // its manual manufacturing override is intentionally unavailable to
   // storefront customers—even if a crafted request includes the field.
-  inputs = { ...inputs, forceLabyrinthPort: false };
+  inputs = sanitizeCustomerEnclosureInputs(inputs);
 
   const required: (keyof EnclosureInputs)[] = [
     'size',
@@ -339,7 +343,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const tieredPrice = row && modifiedPrice ? priceForTier(row, tier, modifiedPrice) : null;
+  const tieredPrice = resolvePositiveOnlinePrice(
+    row && modifiedPrice ? priceForTier(row, tier, modifiedPrice) : null,
+  );
 
   // No price available → tell the client explicitly so the UI can show a
   // "contact us" CTA instead of inventing a number. Baffle status is still

@@ -118,11 +118,11 @@ Before switching storefront navigation to this app, test:
 ## Local checks
 
 ```powershell
-npm install --cache .npm-cache
-npm run typecheck
-$env:NEXT_DIST_DIR='.next-codex'; npm run build
+npm ci
+npm test
+npm run check
 ```
 
-An engine release also requires live verification of both the calculator and `https://bassheadsupply.com/apps/enclosure-designer`; a successful local build alone does not satisfy the parity rule.
+GitHub Actions runs that same clean-install, regression, engine-parity, typecheck, and production-build sequence for every push to `main` and every pull request.
 
-The alternate local build folder avoids Windows/OneDrive locks in the default `.next` directory. Vercel can use the normal default output.
+An engine release also requires live verification of both the calculator and `https://bassheadsupply.com/apps/enclosure-designer`; a successful local build alone does not satisfy the parity rule.

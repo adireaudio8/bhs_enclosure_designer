@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "verify:engine-parity": "node scripts/verify-engine-parity.mjs",
     "sync:engine": "node scripts/sync-enclosure-engine.mjs",
@@ -27,13 +28,14 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@shopify/cli": "4.1.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.182.0",
-    "@shopify/cli": "4.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
