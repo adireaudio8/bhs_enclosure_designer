@@ -7,6 +7,7 @@ import {
   type EnclosureInputs,
 } from '@adireaudio/enclosure-engine';
 import { getAppProxyContext } from '@/lib/app-proxy';
+import { getEnclosureEngineRevision } from '@/lib/enclosure-engine-provenance';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 
 export const runtime = 'nodejs';
@@ -131,6 +132,7 @@ export async function POST(req: Request) {
     ...body.inputs,
     forceLabyrinthPort: false,
   };
+  const engineRevision = getEnclosureEngineRevision();
 
   let validated;
   try {
@@ -185,6 +187,7 @@ export async function POST(req: Request) {
 
   const productionDetails = [
     `Production build details`,
+    `Engine revision: ${engineRevision}`,
     `Brand/model: ${specs.brand || 'Not specified'} ${specs.model || ''}`.trim(),
     `Configuration: ${specs.configuration}`,
     `Build type: ${inputs.enclosureType} (${specs.duty})`,
@@ -208,6 +211,10 @@ export async function POST(req: Request) {
 
   const productionSnapshot = {
     source: 'BHS enclosure designer',
+    engine: {
+      package: '@adireaudio/enclosure-engine',
+      revision: engineRevision,
+    },
     designSummary,
     productionDetails,
     designSpecs: specs,

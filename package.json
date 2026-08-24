@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build",
+    "verify:engine-parity": "node scripts/verify-engine-parity.mjs",
+    "sync:engine": "node scripts/sync-enclosure-engine.mjs",
+    "check": "npm run verify:engine-parity && npm run typecheck && npm run build",
     "shopify:link": "shopify app config link",
     "shopify:deploy": "shopify app deploy",
     "shopify:info": "shopify app info"

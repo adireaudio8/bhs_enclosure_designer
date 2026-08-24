@@ -38,12 +38,18 @@ The website UI intentionally exposes a customer-safe subset of the internal Desi
 
 To refresh the vendored engine:
 
-1. Record the engine's full commit with `git rev-parse HEAD` and confirm it is the same commit used by the calculator.
-2. Run `npm pack` from that exact engine checkout.
-3. Replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz` with the new tarball.
-4. Run `npm install "@adireaudio/enclosure-engine@file:vendor/adireaudio-enclosure-engine-0.0.0.tgz"` in this app so npm deliberately replaces the old tarball integrity and dependency metadata in `package-lock.json`. A plain `npm install` can fail with `EINTEGRITY` because the dependency path is unchanged while the tarball bytes changed.
-5. Run `npm run typecheck` and `npm run build`, then complete the customer regression checklist below.
-6. Commit the tarball and lockfile together, push `main`, redeploy production Vercel, and verify the Shopify app-proxy route.
+1. Update the calculator to the intended exact engine SHA first.
+2. Run the coordinated sync command with the engine repository, exact SHA, and calculator `package.json`:
+
+   ```powershell
+   npm run sync:engine -- --engine-repo "C:\path\to\enclosure-engine" --sha <40-character-sha> --calculator-package "C:\path\to\enclosure-calculator\package.json"
+   ```
+
+   The command fetches the engine remote, packages from a clean detached worktree, replaces the tarball, writes `vendor/enclosure-engine.commit` and `vendor/enclosure-engine.sha256`, performs the explicit file-spec install, verifies the calculator pin, and runs typecheck plus the production build.
+3. Review and commit the tarball, lockfile, revision marker, and tarball hash together.
+4. Push `main`, deploy production Vercel, verify the health endpoint reports the new revision, and complete the customer regression checklist below.
+
+`npm run verify:engine-parity` is also part of `npm run check`. It fails when the recorded revision, tarball hash, package dependency, lockfile integrity, or installed package differs. Pass `--calculator-package <path>` when performing a coordinated cross-app release so it also verifies the calculator's exact Git pin.
 
 **Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors.
 
