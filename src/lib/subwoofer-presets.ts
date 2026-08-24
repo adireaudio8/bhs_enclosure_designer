@@ -39,7 +39,7 @@ export const SUB_BRANDS: SubwooferBrand[] = [
  * union but storefront keeps its own copy so changes here don't ripple back
  * into the engine.
  */
-export const SUPPORTED_SIZES = ['8"', '10"', '12"', '13.5"', '15"', '18"'] as const;
+export const SUPPORTED_SIZES = ['6.5"', '8"', '10"', '12"', '13.5"', '15"', '18"'] as const;
 export type SupportedSize = (typeof SUPPORTED_SIZES)[number];
 
 /**
@@ -58,6 +58,7 @@ export interface SizeDefaults {
 }
 
 export const SIZE_DEFAULTS: Record<SupportedSize, SizeDefaults> = {
+  '6.5"': { outsideDiameter: 6.75, subCutoutDiameter: 5.75, subDisplacement: 0.03, recommendedNetVolume: 0.4, recommendedTuningHz: 36, recommendedPortWidthIn: 0.75 },
   '8"':  { outsideDiameter: 8.5,  subCutoutDiameter: 7.32,  subDisplacement: 0.05, recommendedNetVolume: 0.6, recommendedTuningHz: 35, recommendedPortWidthIn: 1.0 },
   '10"': { outsideDiameter: 10.5, subCutoutDiameter: 9.16,  subDisplacement: 0.10, recommendedNetVolume: 0.9, recommendedTuningHz: 33, recommendedPortWidthIn: 1.25 },
   '12"': { outsideDiameter: 12.5, subCutoutDiameter: 11.16, subDisplacement: 0.13, recommendedNetVolume: 1.6, recommendedTuningHz: 32, recommendedPortWidthIn: 1.5 },
@@ -72,25 +73,30 @@ export const SIZE_DEFAULTS: Record<SupportedSize, SizeDefaults> = {
  * to recommend per duty tier.
  */
 export type DutyKey = 'SD' | 'RD' | 'HD';
+export type MaterialKey = 'Birch Ply' | 'MDF';
+
+export const MATERIAL_OPTIONS: Array<{
+  key: MaterialKey;
+  label: string;
+}> = [
+  { key: 'Birch Ply', label: 'Baltic Birch' },
+  { key: 'MDF', label: 'MDF' },
+];
 
 export const DUTY_OPTIONS: Array<{
   key: DutyKey;
-  enclosureType: string;       // matches engine's EnclosureType union
   label: string;               // shown in dropdown
 }> = [
   {
     key: 'SD',
-    enclosureType: 'Birch Ply - Standard Duty',
     label: 'Standard Duty (up to 1000W RMS)',
   },
   {
     key: 'RD',
-    enclosureType: 'Birch Ply - Regular Duty',
     label: 'Regular Duty (1000–2000W RMS)',
   },
   {
     key: 'HD',
-    enclosureType: 'Birch Ply - Heavy Duty',
     label: 'Heavy Duty (2000W+ RMS)',
   },
 ];
@@ -101,39 +107,16 @@ export function dutyKeyFromEnclosureType(enclosureType: string): DutyKey {
   return 'RD';
 }
 
-/**
- * Customer-facing tiered price matrix keyed by (size, quantity, duty).
- * These values are PLACEHOLDERS — adjust to match the storefront catalog's
- * actual prices for equivalent enclosure tiers. Pricing logic uses these
- * directly rather than a per-design cost calculation, so changing port
- * width / dimensions won't shift the price.
- *
- * Once Andre confirms real numbers, just edit the values here and push.
- * Or, switch the app-proxy pricing route to query Supabase for live prices.
- */
-export const PRICE_MATRIX: Record<
-  SupportedSize,
-  Record<'Single' | 'Dual', Record<DutyKey, number>>
-> = {
-  '8"':    { Single: { SD: 425,  RD: 525,  HD: 625  }, Dual: { SD: 650,  RD: 775,  HD: 900  } },
-  '10"':   { Single: { SD: 525,  RD: 625,  HD: 750  }, Dual: { SD: 750,  RD: 900,  HD: 1075 } },
-  '12"':   { Single: { SD: 600,  RD: 725,  HD: 875  }, Dual: { SD: 875,  RD: 1050, HD: 1250 } },
-  '13.5"': { Single: { SD: 650,  RD: 775,  HD: 925  }, Dual: { SD: 925,  RD: 1100, HD: 1325 } },
-  '15"':   { Single: { SD: 750,  RD: 900,  HD: 1075 }, Dual: { SD: 1075, RD: 1275, HD: 1525 } },
-  '18"':   { Single: { SD: 875,  RD: 1050, HD: 1250 }, Dual: { SD: 1250, RD: 1500, HD: 1800 } },
-};
+export function materialKeyFromEnclosureType(enclosureType: string): MaterialKey {
+  return enclosureType.includes('MDF') ? 'MDF' : 'Birch Ply';
+}
 
-/**
- * Look up the tiered catalog price for a custom enclosure config.
- * Returns null if the size/qty/duty combo isn't in the matrix; caller
- * should fall back to a cost-based calculation in that case.
- */
-export function lookupCatalogPrice(
-  size: SupportedSize,
-  quantity: 'Single' | 'Dual',
+export function enclosureTypeFor(
+  material: MaterialKey,
   duty: DutyKey,
-): number | null {
-  return PRICE_MATRIX[size]?.[quantity]?.[duty] ?? null;
+): `${MaterialKey} - ${'Standard' | 'Regular' | 'Heavy'} Duty` {
+  const strength = duty === 'SD' ? 'Standard' : duty === 'HD' ? 'Heavy' : 'Regular';
+  return `${material} - ${strength} Duty`;
 }
 
 /**

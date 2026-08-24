@@ -48,7 +48,11 @@ import {
   SUB_BRANDS,
   SUPPORTED_SIZES,
   SIZE_DEFAULTS,
+  MATERIAL_OPTIONS,
   DUTY_OPTIONS,
+  dutyKeyFromEnclosureType,
+  enclosureTypeFor,
+  materialKeyFromEnclosureType,
   suggestBoxDimensions,
   subCountFromQuantity,
   type SupportedSize,
@@ -127,6 +131,7 @@ type WindowOrientationOption = 'landscape' | 'portrait';
 export default function CustomEnclosureDesigner() {
   const inputs = useEnclosureStore((s) => s.inputs);
   const calculations = useEnclosureStore((s) => s.calculations);
+  const materialConfig = useEnclosureStore((s) => s.materialConfig);
   const setEnclosureType = useEnclosureStore((s) => s.setEnclosureType);
   const setEnclosureConfiguration = useEnclosureStore((s) => s.setEnclosureConfiguration);
   const setSubwooferQuantity = useEnclosureStore((s) => s.setSubwooferQuantity);
@@ -753,18 +758,44 @@ export default function CustomEnclosureDesigner() {
                 </Field>
               </div>
 
-              <div className="mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <Field label="Material">
+                  <select
+                    className="select-base"
+                    value={materialKeyFromEnclosureType(inputs.enclosureType)}
+                    onChange={(e) => {
+                      setHasInteracted(true);
+                      setEnclosureType(
+                        enclosureTypeFor(
+                          e.target.value as (typeof MATERIAL_OPTIONS)[number]['key'],
+                          dutyKeyFromEnclosureType(inputs.enclosureType),
+                        ),
+                      );
+                    }}
+                  >
+                    {MATERIAL_OPTIONS.map((opt) => (
+                      <option key={opt.key} value={opt.key}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
                 <Field label="Duty (build strength)">
                   <select
                     className="select-base"
-                    value={inputs.enclosureType}
+                    value={dutyKeyFromEnclosureType(inputs.enclosureType)}
                     onChange={(e) => {
                       setHasInteracted(true);
-                      setEnclosureType(e.target.value as typeof inputs.enclosureType);
+                      setEnclosureType(
+                        enclosureTypeFor(
+                          materialKeyFromEnclosureType(inputs.enclosureType),
+                          e.target.value as (typeof DUTY_OPTIONS)[number]['key'],
+                        ),
+                      );
                     }}
                   >
                     {DUTY_OPTIONS.map((opt) => (
-                      <option key={opt.key} value={opt.enclosureType}>
+                      <option key={opt.key} value={opt.key}>
                         {opt.label}
                       </option>
                     ))}
@@ -852,24 +883,16 @@ export default function CustomEnclosureDesigner() {
                   />
                 </Field>
               </div>
-              {/* Flush (recessed) sub mounting toggle.
-                  SBPB / SUPP: structural baffle becomes 18mm Birch with a
-                  flange recess; an internal Sub Mount Plate is added.
-                  Internal depth shrinks by ~0.7".
-                  SUPB: an 18mm Birch Sub Mount Cap is added on top of the
-                  enclosure carrying the flange recess. Internal height
-                  shrinks by ~0.7". Port width auto-adjusts on toggle to
-                  preserve port area (and hence box volume + tuning).
-                  MDF designs gated off — Birch only for V1. */}
+              {/* Flush (recessed) sub mounting toggle. The shared engine
+                  owns the material-specific Birch and MDF construction. */}
               {(() => {
-                const flushAvailable = !inputs.enclosureType.includes('MDF');
                 const isSUPB = inputs.enclosureConfiguration === 'Subs Up/Port Back';
+                const useMDF = inputs.enclosureType.includes('MDF');
                 return (
-                  <label className={`mt-3 flex items-start gap-2 text-[12px] ${flushAvailable ? 'text-neutral-300 cursor-pointer' : 'text-text-muted cursor-not-allowed'}`}>
+                  <label className="mt-3 flex items-start gap-2 text-[12px] text-neutral-300 cursor-pointer">
                     <input
                       type="checkbox"
                       className="mt-0.5"
-                      disabled={!flushAvailable}
                       checked={!!inputs.recessedMounting}
                       onChange={(e) => {
                         setHasInteracted(true);
@@ -878,9 +901,11 @@ export default function CustomEnclosureDesigner() {
                         // change so port area is preserved on toggle. SBPB
                         // doesn't change internalHeight, so no port shift.
                         if (isSUPB) {
-                          const B1 = 0.709;
+                          const capThickness = useMDF ? materialConfig.D1 : materialConfig.B1;
                           const oldIntH = calculations.internalHeight;
-                          const newIntH = next ? (oldIntH - B1) : (oldIntH + B1);
+                          const newIntH = next
+                            ? (oldIntH - capThickness)
+                            : (oldIntH + capThickness);
                           if (oldIntH > 0 && newIntH > 0 && inputs.portWidth > 0) {
                             const raw = inputs.portWidth * (oldIntH / newIntH);
                             const newPortWidth = Math.round(raw * 100) / 100;
@@ -892,15 +917,15 @@ export default function CustomEnclosureDesigner() {
                       }}
                     />
                     <span>
-                      <span className={`font-medium ${flushAvailable ? 'text-neutral-200' : ''}`}>
+                      <span className="font-medium text-neutral-200">
                         Flush (recessed) sub mounting
                       </span>
                       <span className="block text-[11px] text-text-muted">
-                        {!flushAvailable
-                          ? 'Available on Birch designs only.'
-                          : isSUPB
-                          ? 'Adds an 18mm Birch cap on top with flange recess. Port width auto-adjusts to preserve port area.'
-                          : 'Adds a sub-mount plate behind the baffle so the sub sits flush with the box face. Adds cost.'}
+                        {isSUPB
+                          ? `Adds a ${useMDF ? '3/4" MDF' : '18mm Birch'} sub-mount cap on top with flange recess holes. Port width auto-adjusts to preserve port area.`
+                          : useMDF
+                            ? 'Adds a recessed 3/4" MDF baffle and a 3/4" (Standard Duty) or 1" (Regular/Heavy Duty) MDF sub-mount plate behind it.'
+                            : 'Adds a recessed 18mm Birch baffle and an 18mm (Standard Duty) or 24mm (Regular/Heavy Duty) Birch sub-mount plate behind it.'}
                       </span>
                     </span>
                   </label>
