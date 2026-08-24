@@ -28,7 +28,24 @@ Treat the engine repo as read-only unless a dedicated engine change is requested
 vendor/adireaudio-enclosure-engine-0.0.0.tgz
 ```
 
-That avoids Vercel needing SSH/GitHub access to the private `enclosure-engine` repo during `npm install`. To refresh the vendored engine after intentional engine changes, run `npm pack` from the `enclosure-engine` repo, replace the tarball in `vendor/`, then run `npm install` in this app to update `package-lock.json`.
+That avoids Vercel needing SSH/GitHub access to the private `enclosure-engine` repo during `npm install`.
+
+## Mandatory engine parity
+
+This app and `enclosure-calculator-web` are parallel consumers of `enclosure-engine`. Whenever either consumer adopts a new engine revision, both must be updated to the **same full engine commit** in the same release work. The engine change is not complete until both consumers pass their checks, are pushed and deployed, and the live Shopify route `/apps/enclosure-designer` is verified.
+
+The website UI intentionally exposes a customer-safe subset of the internal Design tab. It does not render internal calculations, cut lists, costs, or DXF/CNC downloads. That UI distinction is intentional; it does not permit the underlying shared engine to remain on an older revision.
+
+To refresh the vendored engine:
+
+1. Record the engine's full commit with `git rev-parse HEAD` and confirm it is the same commit used by the calculator.
+2. Run `npm pack` from that exact engine checkout.
+3. Replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz` with the new tarball.
+4. Run `npm install "@adireaudio/enclosure-engine@file:vendor/adireaudio-enclosure-engine-0.0.0.tgz"` in this app so npm deliberately replaces the old tarball integrity and dependency metadata in `package-lock.json`. A plain `npm install` can fail with `EINTEGRITY` because the dependency path is unchanged while the tarball bytes changed.
+5. Run `npm run typecheck` and `npm run build`, then complete the customer regression checklist below.
+6. Commit the tarball and lockfile together, push `main`, redeploy production Vercel, and verify the Shopify app-proxy route.
+
+**Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors. A controlled checkout regression remains separate and requires explicit approval. Remaining customer-facing alignment work is documented in `docs/ENGINE_PARITY_UPDATE_PROPOSAL.md`.
 
 ## Shopify app proxy
 
@@ -82,6 +99,7 @@ The browser never controls price. The checkout endpoint revalidates the design t
 
 Before switching storefront navigation to this app, test:
 
+- The vendored engine source matches the calculator's full engine commit.
 - Vercel deployment installs the vendored `@adireaudio/enclosure-engine` package without GitHub SSH access.
 - App proxy requests pass Shopify signature verification.
 - Supabase pricing returns the expected MAP/dealer values.
@@ -96,5 +114,7 @@ npm install --cache .npm-cache
 npm run typecheck
 $env:NEXT_DIST_DIR='.next-codex'; npm run build
 ```
+
+An engine release also requires live verification of both the calculator and `https://bassheadsupply.com/apps/enclosure-designer`; a successful local build alone does not satisfy the parity rule.
 
 The alternate local build folder avoids Windows/OneDrive locks in the default `.next` directory. Vercel can use the normal default output.

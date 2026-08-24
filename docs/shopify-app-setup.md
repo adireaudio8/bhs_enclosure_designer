@@ -68,3 +68,15 @@ is absent, the app uses `SHOPIFY_CLIENT_ID` or `SHOPIFY_API_KEY` plus
 `SHOPIFY_API_SECRET` to request and cache an Admin API token server-side.
 
 After changing Vercel env vars, redeploy the Vercel project.
+
+## Engine Parity Deployment Gate
+
+Before any deployment that changes `@adireaudio/enclosure-engine`:
+
+1. Confirm the calculator and this designer are targeting the same full `enclosure-engine` commit.
+2. Build the vendored tarball from that exact engine checkout, replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz`, and run `npm install "@adireaudio/enclosure-engine@file:vendor/adireaudio-enclosure-engine-0.0.0.tgz"` to refresh the stale tarball integrity and dependencies in `package-lock.json`. Do not use a plain install for this refresh.
+3. Run `npm run typecheck` and `npm run build` in this repo and the required calculator checks in `enclosure-calculator-web`.
+4. Deploy both consumers as one coordinated engine release.
+5. Verify the calculator and the live Shopify route `https://bassheadsupply.com/apps/enclosure-designer`.
+
+Do not close a calculator-only or designer-only engine bump. The customer UI may intentionally omit manufacturing controls, but the underlying shared engine revision must remain parallel.
