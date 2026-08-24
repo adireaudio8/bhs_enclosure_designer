@@ -2,7 +2,7 @@
 
 **Prepared:** 2026-08-24
 
-**Status:** Package and lockfile parity committed and live; customer UI work not started
+**Status:** Package parity and customer items 1-2 committed and live; provenance/automation work remains
 
 **Target engine:** `910f804299e006ff0f6ce94d09b1a321fb58970a`
 
@@ -49,7 +49,9 @@ This phase is complete in production. The website and calculator now use the sam
 
 ### 1. Enable MDF flush mount
 
-The current website UI disables flush mount whenever the material contains `MDF`, even though the current engine supports MDF flush construction. Remove the Birch-only gate, use material-aware customer copy, and verify Supabase pricing modifiers for MDF + Flush Mount combinations before enabling checkout.
+Before this release, the website UI disabled flush mount whenever the material contained `MDF`, even though the current engine supported MDF flush construction. The required work was to remove the Birch-only gate, use material-aware customer copy, and verify Supabase pricing modifiers for MDF + Flush Mount combinations before enabling checkout.
+
+**Completed 2026-08-24:** commit `f44d9bd` adds the customer Material selector, preserves the selected material while duty changes, removes the Birch-only flush gate, uses the engine's material-specific MDF/Birch cap thickness for top-mounted port-area preservation, and shows material-aware construction copy. Live pricing returned both `mdfDiscount` and `flushMount`; the Single 6.5-inch MDF Regular Duty flush case priced at `$273.49` with an `OK` baffle fit.
 
 Files:
 
@@ -59,7 +61,7 @@ Files:
 
 ### 2. Add the 6.5-inch customer option
 
-The engine and calculator now support `6.5"`, and the calculator documentation records live 6.5-inch pricing rows. The website's local `SUPPORTED_SIZES` still begins at 8 inches.
+The engine and calculator support `6.5"`, and the calculator documentation records live 6.5-inch pricing rows. Before this release, the website's local `SUPPORTED_SIZES` still began at 8 inches.
 
 Required work:
 
@@ -70,6 +72,8 @@ Required work:
 - test baffle fit, suggested dimensions, checkout attributes, and analytics labels.
 
 Do not automatically expose 21-inch support merely because the engine type includes it; that remains a separate catalog/business decision.
+
+**Completed 2026-08-24:** commit `f44d9bd` adds `6.5"` with storefront starting defaults of `6.75"` OD, `5.75"` cutout, `0.03 cu ft` displacement, `0.4 cu ft` net volume per sub, `36 Hz`, and a `0.75"` port. The unused placeholder price matrix was removed; Supabase remains the only online price source. Live verification covered Single through Quad across SD/RD/HD for Birch and MDF flush designs, with every case returning an `OK` baffle fit. The internal Pricing Matrix showed 18 populated 6.5-inch tiers per duty, with MAP and dealer values present in every row. Analytics and checkout already carry `inputs.size`, so the new value flows through without a separate whitelist. The customer checkout button became enabled in the live signed proxy test, but it was not clicked and no draft order was created.
 
 ### 3. Preserve automatic labyrinth behavior without exposing manufacturing controls
 
@@ -190,10 +194,10 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
 ## Recommended release sequence
 
 1. Complete: Phase 1 package parity was committed as `14842b9` and deployed to production as `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B`.
-2. Implement and test MDF flush plus 6.5-inch customer support.
+2. Complete: MDF flush plus 6.5-inch customer support was committed as `f44d9bd` and deployed to production as `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E`.
 3. Add engine provenance and automated parity verification.
-4. Review the full diff and test evidence.
+4. Complete for items 1-2: review the full diff and test evidence.
 5. Complete for Phase 1: commit and push the designer update to `main`.
 6. Complete for Phase 1: deploy production Vercel.
-7. Partially complete: the health, direct app, and live Shopify page regressions passed. Only with explicit approval, create one controlled Shopify test draft order.
+7. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, and MDF flush regressions passed. Only with explicit approval, create one controlled Shopify test draft order.
 8. Complete for the engine package: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`. Per-order engine provenance remains a Phase 2/3 improvement.

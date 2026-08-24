@@ -45,7 +45,9 @@ To refresh the vendored engine:
 5. Run `npm run typecheck` and `npm run build`, then complete the customer regression checklist below.
 6. Commit the tarball and lockfile together, push `main`, redeploy production Vercel, and verify the Shopify app-proxy route.
 
-**Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors. A controlled checkout regression remains separate and requires explicit approval. Remaining customer-facing alignment work is documented in `docs/ENGINE_PARITY_UPDATE_PROPOSAL.md`.
+**Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors.
+
+**Customer option alignment completed 2026-08-24:** production commit `f44d9bd` exposes the engine's 6.5-inch support, adds an explicit Birch/MDF material selector, and enables material-aware flush mounting for both materials. Vercel deployment `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E` reached `READY`. Live 6.5-inch MAP/dealer rows were verified for SD/RD/HD, and the storefront returned a valid `$273.49` guest price for a Single 6.5-inch MDF Regular Duty flush design with an `OK` baffle fit. A controlled checkout/draft-order regression remains separate and requires explicit approval. Remaining work is documented in `docs/ENGINE_PARITY_UPDATE_PROPOSAL.md`.
 
 ## Shopify app proxy
 
