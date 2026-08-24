@@ -264,6 +264,11 @@ export async function POST(req: Request) {
     );
   }
 
+  // Automatic labyrinth routing is part of the shared geometry engine, but
+  // its manual manufacturing override is intentionally unavailable to
+  // storefront customers—even if a crafted request includes the field.
+  inputs = { ...inputs, forceLabyrinthPort: false };
+
   const required: (keyof EnclosureInputs)[] = [
     'size',
     'subwooferQuantity',

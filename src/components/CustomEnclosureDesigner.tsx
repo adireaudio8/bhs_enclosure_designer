@@ -614,6 +614,7 @@ export default function CustomEnclosureDesigner() {
       portPerCube: `${round(calculations.sqInPerCube, 1)} sq in/cu ft`,
       subFit: calculations.baffleCheck.status,
       subFitOk: calculations.baffleCheck.status === 'OK',
+      extendedPortRouting: calculations.labyrinthPort.active,
     };
   }, [calculations, inputs]);
 
@@ -1267,6 +1268,15 @@ export default function CustomEnclosureDesigner() {
               </div>
             </div>
           </div>
+          {reviewFields.extendedPortRouting && (
+            <div
+              role="status"
+              className="mt-2 rounded-md border border-sky-700/50 bg-sky-950/30 px-3 py-2 text-xs leading-relaxed text-sky-100"
+            >
+              <span className="font-semibold">Extended port routing active.</span>{' '}
+              This design automatically uses a multi-fold internal port to preserve your selected tuning. No action is required.
+            </div>
+          )}
         </section>
 
           {/* Dimensions — left column row 3 (below Summary). Just the

@@ -124,9 +124,17 @@ export async function POST(req: Request) {
     );
   }
 
+  // Keep the internal-only manual labyrinth override outside the customer
+  // boundary. The engine can still activate the layout automatically when
+  // the submitted geometry requires it.
+  const inputs: EnclosureInputs = {
+    ...body.inputs,
+    forceLabyrinthPort: false,
+  };
+
   let validated;
   try {
-    validated = await validatePrice(req, body.inputs);
+    validated = await validatePrice(req, inputs);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Price validation failed.' },
@@ -137,7 +145,7 @@ export async function POST(req: Request) {
   const specs = body.designSpecs;
   let calculations;
   try {
-    calculations = calculateEnclosure(body.inputs);
+    calculations = calculateEnclosure(inputs);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Build calculations failed.' },
@@ -145,7 +153,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const inputs = body.inputs;
   const estimatedWeightPounds = estimateShippingWeightPounds(specs);
   const terminalPanel = resolveTerminalPanel(inputs);
   const terminalCustomized =
@@ -160,6 +167,10 @@ export async function POST(req: Request) {
       ? `${inch(inputs.windowCustomWidth)} x ${inch(inputs.windowCustomHeight)} custom`
       : `${inputs.windowSize ?? '12x12'} ${inputs.windowOrientation ?? 'landscape'}`
     : 'None';
+  const labyrinthActive = calculations.labyrinthPort.active;
+  const labyrinthFoldCount = labyrinthActive
+    ? Math.max(0, calculations.labyrinthPort.panels.length - 1)
+    : 0;
 
   const designSummary = [
     `${specs.quantity} ${specs.size} custom enclosure`,
@@ -186,6 +197,7 @@ export async function POST(req: Request) {
     `Port: width ${inch(inputs.portWidth)}, height ${inch(calculations.portHeight)}, area ${round(calculations.portArea, 2)} sq in, port/cube ${round(calculations.sqInPerCube, 2)}, L1 ${inch(calculations.portLength1)}, L2 ${inch(calculations.portLength2)}`,
     `Sub cutout: ${inch(inputs.subCutoutDiameter)}; outside diameter: ${inch(inputs.outsideDiameter)}; displacement: ${round(inputs.subDisplacement, 3)} cu ft`,
     `Baffle fit: ${calculations.baffleCheck.status}; edge clearance ${inch(calculations.baffleCheck.edgeClearance)}; sub-to-sub gap ${inch(calculations.baffleCheck.subToSubGap)}`,
+    `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
     `Terminal cup: ${terminalPanel}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; Y fixed 2.125" from panel bottom`,
     `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
@@ -212,6 +224,10 @@ export async function POST(req: Request) {
       portLength2: round(calculations.portLength2),
       sqInPerCube: round(calculations.sqInPerCube, 2),
       baffleCheck: calculations.baffleCheck,
+      labyrinthPort: {
+        active: labyrinthActive,
+        foldCount: labyrinthFoldCount,
+      },
     },
     options: {
       terminalPanel,
