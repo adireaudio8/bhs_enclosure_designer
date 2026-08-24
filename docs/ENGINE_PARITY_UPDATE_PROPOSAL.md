@@ -94,13 +94,17 @@ Validation passed: the engine's seven labyrinth regression tests passed; the des
 
 Add a committed designer provenance file, for example `vendor/enclosure-engine.commit`, containing the full engine SHA. The engine-sync command should update it automatically. Include that revision in the private production snapshot/metafield so every custom order can be traced to the exact geometry engine that priced and rendered it.
 
+**Completed 2026-08-24:** commit `9d8d6fb` records engine revision `910f804299e006ff0f6ce94d09b1a321fb58970a` in `vendor/enclosure-engine.commit`, ties the vendored package to SHA-256 `167f8c56fa2c78c7fb19a5e9607ce40dbca250ba851eb63c4ab0d6f9a5644a9a`, and injects the revision at build time. Every future designer checkout writes the package name and exact revision into the private `bhs_build.production_snapshot` JSON and the private production-details metafield. Customer-visible order attributes remain unchanged.
+
+The new `sync:engine` command packages only from a clean detached checkout of an exact 40-character SHA, refreshes the tarball and provenance files, performs the explicit file-spec install, compares the calculator pin, and runs typecheck plus the production build. `verify:engine-parity` is now part of `npm run check` and verifies the revision marker, tarball hash, package dependency, lockfile integrity, and installed package contents; it also verifies the calculator's exact engine pin when its `package.json` is supplied. The current calculator pin passed that cross-app check. Production deployment `dpl_A8Tw1CbJmqfp1JZa8BrmujP2FChz` reached `READY`, and the live health endpoint returned the exact engine revision. No Shopify draft order was created, so inspecting these fields on an actual order remains a separately approved controlled checkout test.
+
 ### 5. Keep internal-only features internal
 
 The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, and manufacturing-review improvements. They must be present in the shared package for parity, but the website should not add customer controls or downloads for them as part of this update.
 
 ## Phase 3 — Prevent another parity gap
 
-1. Add a checked-in engine-sync script in this repo that:
+1. Complete: add a checked-in engine-sync script in this repo that:
    - requires an exact 40-character engine SHA;
    - packages only from a clean checkout of that SHA;
    - replaces the tarball;
@@ -108,7 +112,7 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
    - runs the explicit file-spec install;
    - verifies the lockfile and installed package;
    - runs typecheck and build.
-2. Add an npm `verify:engine-parity` command that fails when the recorded SHA, tarball source, installed package, or calculator target disagree.
+2. Complete: add an npm `verify:engine-parity` command that fails when the recorded SHA, tarball hash, installed package, dependency/lockfile integrity, or supplied calculator target disagree.
 3. Add a `files` allowlist or `.npmignore` in `enclosure-engine`. The current clean `npm pack` includes CI configuration and all engine tests, growing the tarball from about 187 KB to about 291 KB. Runtime source, package metadata, and essential documentation are sufficient.
 4. Add designer CI for engine provenance, typecheck, build, and a small regression suite. The designer currently has no automated tests.
 5. Treat calculator and designer deployment verification as one release checklist item. Neither consumer should report the engine bump complete independently.
@@ -200,9 +204,9 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
 1. Complete: Phase 1 package parity was committed as `14842b9` and deployed to production as `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B`.
 2. Complete: MDF flush plus 6.5-inch customer support was committed as `f44d9bd` and deployed to production as `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E`.
 3. Complete: the customer-safe automatic labyrinth indicator and private production fields were committed as `f609b6d` and deployed to production as `dpl_12k4XcgNBBYQdr1iZoi3GBcFxSZE`.
-4. Next: add engine provenance and automated parity verification.
-5. Complete for items 1-3: review the full diff and test evidence.
-6. Complete for Phase 1 and items 1-3: commit and push the designer updates to `main`.
-7. Complete for Phase 1 and items 1-3: deploy production Vercel.
+4. Complete: engine provenance and automated parity verification were committed as `9d8d6fb` and deployed to production as `dpl_A8Tw1CbJmqfp1JZa8BrmujP2FChz`.
+5. Complete for items 1-4: review the full diff and test evidence.
+6. Complete for Phase 1 and items 1-4: commit and push the designer updates to `main`.
+7. Complete for Phase 1 and items 1-4: deploy production Vercel.
 8. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, MDF flush, automatic labyrinth, manual-override boundary, and unavailable-price regressions passed. Only with explicit approval, create one controlled Shopify test draft order to inspect the resulting private metafields.
-9. Complete for the engine package: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`. Per-order engine provenance remains a Phase 2/3 improvement.
+9. Complete for the engine package and future orders: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, and the designer now stores that exact revision in each new private production snapshot.
