@@ -2,24 +2,24 @@
 
 **Prepared:** 2026-08-24
 
-**Status:** Package parity and customer items 1-2 committed and live; provenance/automation work remains
+**Status:** Package parity, customer alignment, provenance, package hardening, and designer CI are committed and live
 
-**Target engine:** `910f804299e006ff0f6ce94d09b1a321fb58970a`
+**Target engine:** `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`
 
 ## Required outcome
 
-Bring the customer website designer and the internal calculator onto the same full `enclosure-engine` revision. The internal calculator already uses `910f804`; the website must vendor that exact engine source, pass its checks, deploy through Vercel, and pass live Shopify regression testing.
+Keep the customer website designer and the internal calculator on the same full `enclosure-engine` revision. Both consumers now use `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`; future engine releases must update, validate, and deploy both consumers as one coordinated release.
 
 This is shared-engine parity, not identical UI parity. The customer designer should continue hiding manufacturing-only calculations, costs, cut lists, DXF/ACC/CNC exports, glue tolerance, manual kerf setup, and manual labyrinth controls unless those surfaces are separately approved for customers.
 
 ## Verified baseline
 
-- The calculator dependency is pinned to engine `910f804`.
+- The calculator dependency is pinned to engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`.
 - Before the 2026-08-24 local update, the website tarball exactly matched engine `df2dc9bb28d4425010e28b92cdfa4902584e1d24` from 2026-06-08 and was 48 engine commits behind the calculator.
-- The local website tarball now comes from a clean checkout of exact engine commit `910f804299e006ff0f6ce94d09b1a321fb58970a`. Its SHA-256 is `167F8C56FA2C78C7FB19A5E9607CE40DBCA250BA851EB63C4AB0D6F9A5644A9A`.
+- The website tarball now comes from a clean checkout of exact engine commit `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`. Its SHA-256 is `b8c1b273fb0e2bd2b0e175db12f3ded1f30468b6a3ef04564f4c7059380ae062`; the packaged archive is 219,492 bytes and contains 24 files.
 - The local lockfile now contains the new tarball integrity, `clipper2-ts@2.0.1-18`, and the engine's postprocessing peer metadata. The previously present unrelated lockfile edits were preserved.
 - The production Vercel deployment was created 2026-06-09, consistent with the older designer source and tarball.
-- A clean isolated package of engine `910f804` was installed into a clean copy of this designer. Engine lint completed with five existing warnings and no errors; engine typecheck passed; all 525 engine tests passed; designer typecheck passed; the production Next.js build passed; the local health and page routes returned HTTP 200.
+- A clean isolated package of engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` was installed into clean calculator and designer worktrees. Engine lint completed with five existing warnings and no errors; engine typecheck and all 525 engine tests passed; all 705 calculator tests passed; all 11 designer regression tests passed; both production builds passed.
 - No compatibility-driven application source edit was required merely to compile the new engine.
 - After the real local tarball and lockfile were updated, `npm run check` passed again: TypeScript completed and the Next.js production build generated all expected routes.
 - Production commit `14842b9` contains only the refreshed engine tarball and required lockfile dependency metadata. Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify route returned HTTP `200`; and the loaded designer exposed configuration, pricing, dimensions, and no browser console errors.
@@ -27,7 +27,7 @@ This is shared-engine parity, not identical UI parity. The customer designer sho
 
 ## Phase 1 — Required package parity
 
-1. Package engine `910f804` from a clean checkout of that exact commit. Do not pack the current dirty engine working tree; it contains unrelated snapshot edits.
+1. Package engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` from a clean checkout of that exact commit. Do not pack a dirty engine working tree.
 2. Replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz`.
 3. Refresh the dependency with the explicit file spec:
 
@@ -98,6 +98,8 @@ Add a committed designer provenance file, for example `vendor/enclosure-engine.c
 
 The new `sync:engine` command packages only from a clean detached checkout of an exact 40-character SHA, refreshes the tarball and provenance files, performs the explicit file-spec install, compares the calculator pin, and runs typecheck plus the production build. `verify:engine-parity` is now part of `npm run check` and verifies the revision marker, tarball hash, package dependency, lockfile integrity, and installed package contents; it also verifies the calculator's exact engine pin when its `package.json` is supplied. The current calculator pin passed that cross-app check. Production deployment `dpl_A8Tw1CbJmqfp1JZa8BrmujP2FChz` reached `READY`, and the live health endpoint returned the exact engine revision. No Shopify draft order was created, so inspecting these fields on an actual order remains a separately approved controlled checkout test.
 
+**Packaging and CI hardening completed 2026-08-24:** engine commit `7706706e` limits the published package to runtime source plus essential documentation; calculator commit `d1660027` and designer commit `6d18cbd1` move both consumers to that exact revision. Designer follow-up `e871e9e8` uses the current GitHub Actions runtimes. Engine CI run `32776918128` and designer CI run `32777698177` passed. Calculator deployment `dpl_54h37vwqmKhJoiVVhioMCVHsmxZG` and designer deployment `dpl_8WLcPSi8PqHZVGtEP7AcJn9CKwSx` reached `READY`; the live calculator, direct designer health endpoint, and Shopify designer route returned HTTP `200`, and the health endpoint reported the exact engine revision.
+
 ### 5. Keep internal-only features internal
 
 The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, and manufacturing-review improvements. They must be present in the shared package for parity, but the website should not add customer controls or downloads for them as part of this update.
@@ -113,9 +115,9 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
    - verifies the lockfile and installed package;
    - runs typecheck and build.
 2. Complete: add an npm `verify:engine-parity` command that fails when the recorded SHA, tarball hash, installed package, dependency/lockfile integrity, or supplied calculator target disagree.
-3. Add a `files` allowlist or `.npmignore` in `enclosure-engine`. The current clean `npm pack` includes CI configuration and all engine tests, growing the tarball from about 187 KB to about 291 KB. Runtime source, package metadata, and essential documentation are sufficient.
-4. Add designer CI for engine provenance, typecheck, build, and a small regression suite. The designer currently has no automated tests.
-5. Treat calculator and designer deployment verification as one release checklist item. Neither consumer should report the engine bump complete independently.
+3. Complete: `enclosure-engine` now has a package `files` allowlist. The archive dropped from 58 files and 291,261 bytes to 24 files and 219,492 bytes, excluding tests, CI configuration, and development-only configuration while retaining runtime source and the README.
+4. Complete: designer CI installs from a clean lockfile, runs 11 focused normal/labyrinth/customer-boundary/pricing regressions, verifies engine parity, runs TypeScript, and produces the production build. The current workflow passed on `main` with no annotations.
+5. Complete: engine `7706706e`, calculator `d1660027`, and designer `6d18cbd1`/`e871e9e8` were validated and deployed as one coordinated release. Future engine bumps retain this combined release requirement.
 
 ## Required regression matrix
 
@@ -205,8 +207,9 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
 2. Complete: MDF flush plus 6.5-inch customer support was committed as `f44d9bd` and deployed to production as `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E`.
 3. Complete: the customer-safe automatic labyrinth indicator and private production fields were committed as `f609b6d` and deployed to production as `dpl_12k4XcgNBBYQdr1iZoi3GBcFxSZE`.
 4. Complete: engine provenance and automated parity verification were committed as `9d8d6fb` and deployed to production as `dpl_A8Tw1CbJmqfp1JZa8BrmujP2FChz`.
-5. Complete for items 1-4: review the full diff and test evidence.
-6. Complete for Phase 1 and items 1-4: commit and push the designer updates to `main`.
-7. Complete for Phase 1 and items 1-4: deploy production Vercel.
-8. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, MDF flush, automatic labyrinth, manual-override boundary, and unavailable-price regressions passed. Only with explicit approval, create one controlled Shopify test draft order to inspect the resulting private metafields.
-9. Complete for the engine package and future orders: the deployed designer and calculator use engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, and the designer now stores that exact revision in each new private production snapshot.
+5. Complete: the engine package allowlist was committed as `7706706e`; the calculator pin was committed as `d1660027`; designer CI and focused regressions were committed as `6d18cbd1`, with current action runtimes in `e871e9e8`.
+6. Complete: review the full diff and test evidence.
+7. Complete: commit and push the coordinated engine, calculator, and designer updates to `main`.
+8. Complete: deploy both production consumers and verify the live calculator, designer health endpoint, and Shopify designer route.
+9. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, MDF flush, automatic labyrinth, manual-override boundary, and unavailable-price regressions passed. Only with explicit approval, create one controlled Shopify test draft order to inspect the resulting private metafields.
+10. Complete for the engine package and future orders: the deployed designer and calculator use engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`, and the designer stores that exact revision in each new private production snapshot.
