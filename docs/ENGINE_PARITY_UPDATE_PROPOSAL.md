@@ -2,21 +2,33 @@
 
 **Prepared:** 2026-08-24
 
-**Status:** Package parity, customer alignment, provenance, package hardening, and designer CI are committed and live
+**Status:** Engine parity and approved customer UI parity release validated locally; production deployment pending
 
-**Target engine:** `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`
+**Target engine:** `60c7242b3ca728de48566741019d7ee3713e3e23`
 
 ## Required outcome
 
-Keep the customer website designer and the internal calculator on the same full `enclosure-engine` revision. Both consumers now use `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`; future engine releases must update, validate, and deploy both consumers as one coordinated release.
+Keep the customer website designer and the internal calculator on the same full `enclosure-engine` revision. Both consumers must use `60c7242b3ca728de48566741019d7ee3713e3e23`; future engine releases must update, validate, and deploy both consumers as one coordinated release.
 
 This is shared-engine parity, not identical UI parity. The customer designer should continue hiding manufacturing-only calculations, costs, cut lists, DXF/ACC/CNC exports, glue tolerance, manual kerf setup, and manual labyrinth controls unless those surfaces are separately approved for customers.
 
+## Approved customer UI scope — 2026-08-24
+
+- Use the shared Supabase `brands.model_codes` directory for the customer brand/model selectors instead of a storefront-only model list.
+- Apply model-and-size geometry only when the shared `subwoofers` row contains authoritative values. Missing rows remain editable size defaults and must be labeled as such.
+- Expose customer-safe X/Y subwoofer positioning for Subs Up / Port Back designs, including Recenter, conditional Snap to safe, viewer feedback, checkout blocking, and private production snapshot fields.
+- Add customer build notes and preserve them in the Shopify draft-order note and private production data.
+- Do not offer Flat Pack. The server forces the customer assembly method to Press Together.
+- Keep custom acrylic dimensions deferred. Customers may use only 12x12 or 24x12 standard windows; custom dimensions are cleared at the server boundary.
+- Keep manual kerf and manual labyrinth controls internal. Automatic extended port routing and its customer-safe status remain supported.
+
+Engine `60c7242` is the `7706706e` package-hardened baseline plus the approved series/material pricing-default alignment. The designer tarball, revision marker, SHA-256 marker, installed package, and calculator pin must all match this full revision before deployment.
+
 ## Verified baseline
 
-- The calculator dependency is pinned to engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`.
+- Historical 2026-08-24 package-hardening baseline: the calculator and website were synchronized at engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` before the later pricing-default release.
 - Before the 2026-08-24 local update, the website tarball exactly matched engine `df2dc9bb28d4425010e28b92cdfa4902584e1d24` from 2026-06-08 and was 48 engine commits behind the calculator.
-- The website tarball now comes from a clean checkout of exact engine commit `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`. Its SHA-256 is `b8c1b273fb0e2bd2b0e175db12f3ded1f30468b6a3ef04564f4c7059380ae062`; the packaged archive is 219,492 bytes and contains 24 files.
+- The current website tarball comes from a clean checkout of exact engine commit `60c7242b3ca728de48566741019d7ee3713e3e23`. Its SHA-256 is `663f9d918a890137361ada7a20458ec06250d3a954354140df28a8a1ff715ab7`; the packaged archive is 219,542 bytes. The prior `7706706e` package-hardening release remains the historical baseline.
 - The local lockfile now contains the new tarball integrity, `clipper2-ts@2.0.1-18`, and the engine's postprocessing peer metadata. The previously present unrelated lockfile edits were preserved.
 - The production Vercel deployment was created 2026-06-09, consistent with the older designer source and tarball.
 - A clean isolated package of engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` was installed into clean calculator and designer worktrees. Engine lint completed with five existing warnings and no errors; engine typecheck and all 525 engine tests passed; all 705 calculator tests passed; all 11 designer regression tests passed; both production builds passed.
@@ -27,7 +39,7 @@ This is shared-engine parity, not identical UI parity. The customer designer sho
 
 ## Phase 1 — Required package parity
 
-1. Package engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` from a clean checkout of that exact commit. Do not pack a dirty engine working tree.
+1. Package engine `60c7242b3ca728de48566741019d7ee3713e3e23` from a clean checkout of that exact commit. Do not pack a dirty engine working tree.
 2. Replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz`.
 3. Refresh the dependency with the explicit file spec:
 
@@ -212,4 +224,4 @@ The package update includes CNC, ACC, DXF, kerf, logo-toolpath, glue-tolerance, 
 7. Complete: commit and push the coordinated engine, calculator, and designer updates to `main`.
 8. Complete: deploy both production consumers and verify the live calculator, designer health endpoint, and Shopify designer route.
 9. Partially complete: the health, direct app, live Shopify page, 6.5-inch pricing, MDF flush, automatic labyrinth, manual-override boundary, and unavailable-price regressions passed. Only with explicit approval, create one controlled Shopify test draft order to inspect the resulting private metafields.
-10. Complete for the engine package and future orders: the deployed designer and calculator use engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`, and the designer stores that exact revision in each new private production snapshot.
+10. Historical baseline complete: the designer and calculator previously used engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1`. The coordinated release target is now `60c7242b3ca728de48566741019d7ee3713e3e23`, and the designer stores the active exact revision in each new private production snapshot.

@@ -36,6 +36,12 @@ This app and `enclosure-calculator-web` are parallel consumers of `enclosure-eng
 
 The website UI intentionally exposes a customer-safe subset of the internal Design tab. It does not render internal calculations, cut lists, costs, or DXF/CNC downloads. That UI distinction is intentional; it does not permit the underlying shared engine to remain on an older revision.
 
+Current coordinated engine revision:
+
+```text
+60c7242b3ca728de48566741019d7ee3713e3e23
+```
+
 To refresh the vendored engine:
 
 1. Update the calculator to the intended exact engine SHA first.
@@ -54,6 +60,8 @@ To refresh the vendored engine:
 **Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors.
 
 **Customer option alignment completed 2026-08-24:** production commit `f44d9bd` exposes the engine's 6.5-inch support, adds an explicit Birch/MDF material selector, and enables material-aware flush mounting for both materials. Vercel deployment `dpl_4QWvQMW6opX2KLPTZJfj5bmHtP2E` reached `READY`. Live 6.5-inch MAP/dealer rows were verified for SD/RD/HD, and the storefront returned a valid `$273.49` guest price for a Single 6.5-inch MDF Regular Duty flush design with an `OK` baffle fit. A controlled checkout/draft-order regression remains separate and requires explicit approval. Remaining work is documented in `docs/ENGINE_PARITY_UPDATE_PROPOSAL.md`.
+
+**Customer UI parity release prepared 2026-08-24:** the storefront now reads the shared Supabase brand/model directory, applies model-and-size measurements when authoritative rows exist, exposes customer-safe subwoofer X/Y positioning for Subs Up / Port Back designs, and stores customer build notes in the Shopify draft-order note plus private production snapshot. The server boundary forces Press Together construction, rejects customer control of manual kerf/labyrinth behavior, and limits acrylic windows to the standard 12x12 and 24x12 choices. Flat Pack is not offered. Custom acrylic dimensions remain deferred. The shared measurement rows are intentionally treated as sparse: missing model dimensions use clearly labeled, editable size defaults rather than being represented as model-specific data.
 
 ## Shopify app proxy
 
@@ -105,6 +113,8 @@ Recommended Admin API scopes:
 
 The browser never controls price. The checkout endpoint revalidates the design through `/apps/enclosure-designer/api/design-pricing`, creates a Shopify draft order with a custom-priced line item, then redirects the customer to the draft order invoice URL.
 
+Customer build notes are normalized and length-limited, then written to the draft-order note and private `bhs_build` production fields. Subwoofer placement and baffle fit are recalculated server-side before a draft order can be created. Crafted requests cannot enable Flat Pack, manual kerf/labyrinth controls, or custom acrylic dimensions.
+
 Before switching storefront navigation to this app, test:
 
 - The vendored engine source matches the calculator's full engine commit.
@@ -113,6 +123,11 @@ Before switching storefront navigation to this app, test:
 - Supabase pricing returns the expected MAP/dealer values.
 - Logged-in customer tags resolve customer/dealer/distributor tier correctly.
 - Brand logo EPS lookup works or fails gracefully.
+- Shared brand/model catalog loads from Supabase; missing model measurements are disclosed as editable size fallbacks.
+- Model selection applies any stored model-and-size cutout, outside-diameter, displacement, and mounting-depth values.
+- Subs Up / Port Back positioning can recenter and snap to a safe build area; unsafe placement blocks checkout.
+- Customer notes reach the private production snapshot and draft-order note.
+- Flat Pack and custom acrylic dimensions remain unavailable.
 - Draft order checkout URL is created and opens Shopify checkout.
 
 ## Local checks

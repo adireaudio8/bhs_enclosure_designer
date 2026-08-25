@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import {
   calculateEnclosure,
+  checkSubwooferPlacement,
+  generateCutList,
   resolveTerminalPanel,
   resolveWindowDimensions,
   resolveWindowPanel,
@@ -13,12 +15,14 @@ import {
 } from '@/lib/customer-enclosure-boundary';
 import { getEnclosureEngineRevision } from '@/lib/enclosure-engine-provenance';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
+import { normalizeCustomerNotes } from '@/lib/customer-notes';
 
 export const runtime = 'nodejs';
 
 interface DesignSpecs {
   brand?: string;
   model?: string;
+  modelName?: string;
   size: string;
   quantity: string;
   configuration: string;
@@ -36,6 +40,7 @@ interface DesignSpecs {
 interface CheckoutRequest {
   inputs: EnclosureInputs;
   designSpecs: DesignSpecs;
+  customerNotes?: unknown;
 }
 
 interface PricingResponse {
@@ -133,6 +138,7 @@ export async function POST(req: Request) {
   // boundary. The engine can still activate the layout automatically when
   // the submitted geometry requires it.
   const inputs = sanitizeCustomerEnclosureInputs(body.inputs);
+  const customerNotes = normalizeCustomerNotes(body.customerNotes);
   const engineRevision = getEnclosureEngineRevision();
 
   let validated;
@@ -145,13 +151,34 @@ export async function POST(req: Request) {
     );
   }
 
-  const specs = body.designSpecs;
+  const specs = {
+    ...body.designSpecs,
+    brand: String(inputs.subwooferBrand ?? body.designSpecs.brand ?? '').trim(),
+    model: String(inputs.subwooferModel ?? body.designSpecs.model ?? '').trim(),
+    modelName: String(body.designSpecs.modelName ?? '').trim().slice(0, 120),
+  };
   let calculations;
   try {
     calculations = calculateEnclosure(inputs);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Build calculations failed.' },
+      { status: 422 },
+    );
+  }
+
+  if (calculations.baffleCheck.status === 'DOES NOT FIT') {
+    return NextResponse.json(
+      { error: 'The selected subwoofer does not fit on the baffle.' },
+      { status: 422 },
+    );
+  }
+  const subwooferPlacement = inputs.enclosureConfiguration === 'Subs Up/Port Back'
+    ? checkSubwooferPlacement(inputs, calculations, generateCutList(inputs, calculations))
+    : null;
+  if (subwooferPlacement && !subwooferPlacement.safe) {
+    return NextResponse.json(
+      { error: subwooferPlacement.conflict?.label ?? 'The subwoofer position is outside the safe build area.' },
       { status: 422 },
     );
   }
@@ -178,7 +205,9 @@ export async function POST(req: Request) {
   const designSummary = [
     `${specs.quantity} ${specs.size} custom enclosure`,
     specs.brand ? specs.brand : null,
-    specs.model ? specs.model : null,
+    specs.modelName
+      ? `${specs.modelName}${specs.model ? ` (${specs.model})` : ''}`
+      : specs.model || null,
     specs.configuration,
     `${specs.internalVolume} cu ft`,
     `${specs.tuningFreq} Hz`,
@@ -189,7 +218,7 @@ export async function POST(req: Request) {
   const productionDetails = [
     `Production build details`,
     `Engine revision: ${engineRevision}`,
-    `Brand/model: ${specs.brand || 'Not specified'} ${specs.model || ''}`.trim(),
+    `Brand/model: ${specs.brand || 'Not specified'} ${specs.modelName || specs.model || ''}${specs.modelName && specs.model ? ` (${specs.model})` : ''}`.trim(),
     `Configuration: ${specs.configuration}`,
     `Build type: ${inputs.enclosureType} (${specs.duty})`,
     `Sub qty/size: ${specs.quantity} ${specs.size}`,
@@ -201,6 +230,7 @@ export async function POST(req: Request) {
     `Port: width ${inch(inputs.portWidth)}, height ${inch(calculations.portHeight)}, area ${round(calculations.portArea, 2)} sq in, port/cube ${round(calculations.sqInPerCube, 2)}, L1 ${inch(calculations.portLength1)}, L2 ${inch(calculations.portLength2)}`,
     `Sub cutout: ${inch(inputs.subCutoutDiameter)}; outside diameter: ${inch(inputs.outsideDiameter)}; displacement: ${round(inputs.subDisplacement, 3)} cu ft`,
     `Baffle fit: ${calculations.baffleCheck.status}; edge clearance ${inch(calculations.baffleCheck.edgeClearance)}; sub-to-sub gap ${inch(calculations.baffleCheck.subToSubGap)}`,
+    `Subwoofer position: ${subwooferPlacement ? `${subwooferPlacement.safe ? 'Safe' : 'Unsafe'}; offset X ${signedInch(inputs.subwooferXOffset ?? 0)}, Y ${signedInch(inputs.subwooferYOffset ?? 0)}` : 'Centered on baffle'}`,
     `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
     `Terminal cup: ${terminalPanel}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; Y fixed 2.125" from panel bottom`,
@@ -208,6 +238,7 @@ export async function POST(req: Request) {
     `Pricing tier: ${validated.tier}`,
     `Lead time: ${validated.leadTimeDays} days`,
     `Estimated shipping weight: ${estimatedWeightPounds} lb`,
+    `Customer notes: ${customerNotes || 'None'}`,
   ].join('\n');
 
   const productionSnapshot = {
@@ -218,6 +249,7 @@ export async function POST(req: Request) {
     },
     designSummary,
     productionDetails,
+    customerNotes,
     designSpecs: specs,
     inputs,
     calculations: {
@@ -247,6 +279,11 @@ export async function POST(req: Request) {
       windowDimensions,
       windowXOffset: round(inputs.windowXOffset ?? 0, 3),
       windowYOffset: round(inputs.windowYOffset ?? 0, 3),
+      subwooferPositionCustomized:
+        inputs.subwooferXOffset !== undefined || inputs.subwooferYOffset !== undefined,
+      subwooferXOffset: round(inputs.subwooferXOffset ?? 0, 3),
+      subwooferYOffset: round(inputs.subwooferYOffset ?? 0, 3),
+      subwooferPlacementSafe: subwooferPlacement?.safe ?? true,
     },
     pricingTier: validated.tier,
     leadTimeDays: validated.leadTimeDays,
@@ -256,7 +293,8 @@ export async function POST(req: Request) {
 
   const lineAttributes = [
     attr('Subwoofer brand', specs.brand),
-    attr('Subwoofer model', specs.model),
+    attr('Subwoofer model', specs.modelName || specs.model),
+    attr('Subwoofer model code', specs.model),
     attr('Subwoofer size', specs.size),
     attr('Subwoofer quantity', specs.quantity),
     attr('Configuration', specs.configuration),
@@ -291,7 +329,11 @@ export async function POST(req: Request) {
       }`,
       {
         input: {
-          note: `Custom enclosure designer request: ${designSummary}\n\nInternal build details are stored in draft order metafields under bhs_build.`,
+          note: [
+            `Custom enclosure designer request: ${designSummary}`,
+            customerNotes ? `Customer notes:\n${customerNotes}` : null,
+            'Internal build details are stored in draft order metafields under bhs_build.',
+          ].filter(Boolean).join('\n\n'),
           tags: ['custom-enclosure', 'enclosure-designer'],
           visibleToCustomer: true,
           acceptAutomaticDiscounts: false,

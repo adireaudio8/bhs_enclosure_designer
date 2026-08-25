@@ -33,9 +33,12 @@ import {
   SUBWOOFER_QUANTITIES,
   PORT_QUANTITIES,
   checkTerminalPlacement,
+  checkSubwooferPlacement,
   checkWindowPlacement,
+  findNearestSafeOffsets,
   findNearestSafeWindowOffsets,
   findNearestSafeXOffset,
+  getSafeOffsetRange,
   panelWidthInches,
   resolveDefaultWindowOffsets,
   resolveTerminalPanel,
@@ -56,9 +59,14 @@ import {
   suggestBoxDimensions,
   subCountFromQuantity,
   type SupportedSize,
-  type SubwooferBrand,
   type SubQuantityWord,
 } from '@/lib/subwoofer-presets';
+import {
+  findCustomerModelVariant,
+  type CustomerSubwooferBrand,
+  type CustomerSubwooferModel,
+} from '@/lib/subwoofer-catalog';
+import { CUSTOMER_NOTES_MAX_LENGTH } from '@/lib/customer-notes';
 
 // Engine's 3D viewer — load client-side only; Three.js requires `window`.
 const EnclosureViewer3D = dynamic(
@@ -137,6 +145,7 @@ export default function CustomEnclosureDesigner() {
   const setSubwooferQuantity = useEnclosureStore((s) => s.setSubwooferQuantity);
   const setSize = useEnclosureStore((s) => s.setSize);
   const setSubwooferBrand = useEnclosureStore((s) => s.setSubwooferBrand);
+  const setSubwooferModel = useEnclosureStore((s) => s.setSubwooferModel);
   const setSubDisplacement = useEnclosureStore((s) => s.setSubDisplacement);
   const setSubCutoutDiameter = useEnclosureStore((s) => s.setSubCutoutDiameter);
   const setOutsideDiameter = useEnclosureStore((s) => s.setOutsideDiameter);
@@ -156,6 +165,44 @@ export default function CustomEnclosureDesigner() {
   // pre-fill from the curated table. They can still override box dims
   // manually below if they want a specific shape.
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [subwooferCatalog, setSubwooferCatalog] = useState<CustomerSubwooferBrand[]>([]);
+  const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [customerNotes, setCustomerNotes] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(appApi('subwoofer-catalog'))
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Catalog lookup failed (${response.status}).`);
+        return response.json() as Promise<{ brands?: CustomerSubwooferBrand[] }>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setSubwooferCatalog(Array.isArray(data.brands) ? data.brands : []);
+        setCatalogState('ready');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSubwooferCatalog([]);
+        setCatalogState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedCatalogBrand = useMemo(
+    () => subwooferCatalog.find(
+      (brand) => brand.name.toLowerCase() === String(inputs.subwooferBrand ?? '').toLowerCase(),
+    ),
+    [inputs.subwooferBrand, subwooferCatalog],
+  );
+  const selectedCatalogModel = useMemo(
+    () => selectedCatalogBrand?.models.find(
+      (model) => model.code.toLowerCase() === String(inputs.subwooferModel ?? '').toLowerCase(),
+    ),
+    [inputs.subwooferModel, selectedCatalogBrand],
+  );
 
   // ─── Analytics — designer funnel events ────────────────────────────────
   // Fire `designer_view` once on mount. Then watch hasInteracted to fire
@@ -185,13 +232,14 @@ export default function CustomEnclosureDesigner() {
     if (hasInteracted) return;
     const size = inputs.size as SupportedSize;
     const defaults = SIZE_DEFAULTS[size] ?? SIZE_DEFAULTS['12"'];
+    const modelVariant = findCustomerModelVariant(selectedCatalogModel, size);
     const qty = inputs.subwooferQuantity as SubQuantityWord;
     const dims = suggestBoxDimensions(size, qty);
 
     setEnclosureType('Birch Ply - Regular Duty');
-    setOutsideDiameter(defaults.outsideDiameter);
-    setSubCutoutDiameter(defaults.subCutoutDiameter);
-    setSubDisplacement(defaults.subDisplacement);
+    setOutsideDiameter(modelVariant?.outsideDiameter ?? defaults.outsideDiameter);
+    setSubCutoutDiameter(modelVariant?.cutoutDiameter ?? defaults.subCutoutDiameter);
+    setSubDisplacement(modelVariant?.displacement ?? defaults.subDisplacement);
     setBoxDepth(dims.boxDepth);
     setBoxHeight(dims.boxHeight);
     setPortWidth(defaults.recommendedPortWidthIn);
@@ -201,6 +249,7 @@ export default function CustomEnclosureDesigner() {
     hasInteracted,
     inputs.size,
     inputs.subwooferQuantity,
+    selectedCatalogModel,
     setEnclosureType,
     setOutsideDiameter,
     setSubCutoutDiameter,
@@ -212,12 +261,17 @@ export default function CustomEnclosureDesigner() {
     setNetAirSpace,
   ]);
 
-  function applyPresetDefaults(size: SupportedSize, qty: SubQuantityWord) {
+  function applyPresetDefaults(
+    size: SupportedSize,
+    qty: SubQuantityWord,
+    model: CustomerSubwooferModel | null | undefined = selectedCatalogModel,
+  ) {
     const defaults = SIZE_DEFAULTS[size];
+    const modelVariant = findCustomerModelVariant(model ?? undefined, size);
     const dims = suggestBoxDimensions(size, qty);
-    setOutsideDiameter(defaults.outsideDiameter);
-    setSubCutoutDiameter(defaults.subCutoutDiameter);
-    setSubDisplacement(defaults.subDisplacement);
+    setOutsideDiameter(modelVariant?.outsideDiameter ?? defaults.outsideDiameter);
+    setSubCutoutDiameter(modelVariant?.cutoutDiameter ?? defaults.subCutoutDiameter);
+    setSubDisplacement(modelVariant?.displacement ?? defaults.subDisplacement);
     setBoxDepth(dims.boxDepth);
     setBoxHeight(dims.boxHeight);
     setPortWidth(defaults.recommendedPortWidthIn);
@@ -326,9 +380,49 @@ export default function CustomEnclosureDesigner() {
     };
   }, [inputsKey]);
 
+  const subwooferPositionAvailable =
+    inputs.enclosureConfiguration === 'Subs Up/Port Back';
+  const subwooferPositionCustomized =
+    inputs.subwooferXOffset !== undefined || inputs.subwooferYOffset !== undefined;
+  const subwooferOffsetRange = subwooferPositionAvailable
+    ? getSafeOffsetRange(inputs, calculations, cutList)
+    : null;
+  const subwooferOffsetRangeValid = !!subwooferOffsetRange
+    && Number.isFinite(subwooferOffsetRange.xMin)
+    && Number.isFinite(subwooferOffsetRange.xMax)
+    && Number.isFinite(subwooferOffsetRange.yMin)
+    && Number.isFinite(subwooferOffsetRange.yMax)
+    && subwooferOffsetRange.xMin <= subwooferOffsetRange.xMax
+    && subwooferOffsetRange.yMin <= subwooferOffsetRange.yMax;
+  const subwooferPlacementCheck = subwooferPositionAvailable
+    ? checkSubwooferPlacement(inputs, calculations, cutList)
+    : null;
+  const subwooferPlacementSafe = subwooferPlacementCheck?.safe ?? true;
+
   const canAddToCart =
     pricing.status === 'ok' &&
-    calculations.baffleCheck.status !== 'DOES NOT FIT';
+    calculations.baffleCheck.status !== 'DOES NOT FIT' &&
+    subwooferPlacementSafe;
+
+  function handleSubwooferPositionEnable(enabled: boolean) {
+    setHasInteracted(true);
+    setInputs({
+      subwooferXOffset: enabled ? 0 : undefined,
+      subwooferYOffset: enabled ? 0 : undefined,
+    });
+  }
+
+  function handleSubwooferPositionRecenter() {
+    setHasInteracted(true);
+    setInputs({ subwooferXOffset: 0, subwooferYOffset: 0 });
+  }
+
+  function handleSubwooferPositionSnap() {
+    const safe = findNearestSafeOffsets(inputs, calculations, cutList);
+    if (!safe) return;
+    setHasInteracted(true);
+    setInputs({ subwooferXOffset: safe.x, subwooferYOffset: safe.y });
+  }
 
   // ─── Terminal cup placement state (mirrors calculator's DesignTerminalPanel) ─
   // Three states the customer can pick:
@@ -538,6 +632,7 @@ export default function CustomEnclosureDesigner() {
     const designSpecs = {
       brand: inputs.subwooferBrand ?? '',
       model: inputs.subwooferModel ?? '',
+      modelName: selectedCatalogModel?.name ?? '',
       size: inputs.size,
       quantity: inputs.subwooferQuantity,
       configuration: inputs.enclosureConfiguration,
@@ -573,7 +668,7 @@ export default function CustomEnclosureDesigner() {
       const res = await fetch(appApi('checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs, designSpecs }),
+        body: JSON.stringify({ inputs, designSpecs, customerNotes }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         checkoutUrl?: string;
@@ -614,9 +709,12 @@ export default function CustomEnclosureDesigner() {
       portPerCube: `${round(calculations.sqInPerCube, 1)} sq in/cu ft`,
       subFit: calculations.baffleCheck.status,
       subFitOk: calculations.baffleCheck.status === 'OK',
+      subPosition: subwooferPositionAvailable
+        ? (subwooferPlacementSafe ? 'SAFE' : 'ADJUST')
+        : 'CENTERED',
       extendedPortRouting: calculations.labyrinthPort.active,
     };
-  }, [calculations, inputs]);
+  }, [calculations, inputs, subwooferPlacementSafe, subwooferPositionAvailable]);
 
   return (
     <div className="bg-neutral-950 text-white">
@@ -664,20 +762,60 @@ export default function CustomEnclosureDesigner() {
                 Configuration
               </h2>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <Field label="Brand">
                   <select
                     className="select-base"
                     value={inputs.subwooferBrand ?? ''}
                     onChange={(e) => {
                       setHasInteracted(true);
-                      setSubwooferBrand(e.target.value as SubwooferBrand);
+                      setSubwooferBrand(e.target.value);
+                      setSubwooferModel('');
+                      applyPresetDefaults(
+                        inputs.size as SupportedSize,
+                        inputs.subwooferQuantity as SubQuantityWord,
+                        null,
+                      );
                     }}
                   >
                     <option value="">Select…</option>
-                    {SUB_BRANDS.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
+                    {(subwooferCatalog.length
+                      ? subwooferCatalog.map((brand) => brand.name)
+                      : SUB_BRANDS
+                    ).map((brand) => (
+                      <option key={brand} value={brand}>
+                        {brand}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Model">
+                  <select
+                    className="select-base"
+                    value={inputs.subwooferModel ?? ''}
+                    disabled={!inputs.subwooferBrand || catalogState !== 'ready'}
+                    onChange={(e) => {
+                      setHasInteracted(true);
+                      const code = e.target.value;
+                      const model = selectedCatalogBrand?.models.find((item) => item.code === code);
+                      setSubwooferModel(code);
+                      applyPresetDefaults(
+                        inputs.size as SupportedSize,
+                        inputs.subwooferQuantity as SubQuantityWord,
+                        model ?? null,
+                      );
+                    }}
+                  >
+                    <option value="">
+                      {catalogState === 'loading'
+                        ? 'Loading models…'
+                        : inputs.subwooferBrand
+                          ? 'Select model…'
+                          : 'Select brand first…'}
+                    </option>
+                    {(selectedCatalogBrand?.models ?? []).map((model) => (
+                      <option key={model.code} value={model.code}>
+                        {model.name} ({model.code})
                       </option>
                     ))}
                   </select>
@@ -803,6 +941,18 @@ export default function CustomEnclosureDesigner() {
                   </select>
                 </Field>
               </div>
+              {catalogState === 'error' && (
+                <p className="mt-1.5 text-[11px] text-amber-300/80">
+                  The shared model list is temporarily unavailable. You can still enter the exact measurements below.
+                </p>
+              )}
+              {selectedCatalogModel && (
+                <p className="mt-1.5 text-[11px] text-text-muted">
+                  {findCustomerModelVariant(selectedCatalogModel, inputs.size as SupportedSize)
+                    ? `Applied the available stored ${inputs.size} measurements for ${selectedCatalogModel.name}. Any missing values continue to use editable size defaults; verify them below.`
+                    : `No stored ${inputs.size} measurements are available for ${selectedCatalogModel.name} yet. Editable size defaults are shown below; verify them against the manufacturer manual.`}
+                </p>
+              )}
 
               {/* Most-edited tuning controls live up here next to the brand/size
                   pickers so the customer doesn't have to look down at a
@@ -1159,6 +1309,31 @@ export default function CustomEnclosureDesigner() {
             )}
           </section>
 
+          <section className="bg-neutral-900 border border-neutral-800 rounded-lg p-3">
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                Build Notes
+              </h2>
+              <span className="text-[10px] text-text-muted">
+                {customerNotes.length}/{CUSTOMER_NOTES_MAX_LENGTH}
+              </span>
+            </div>
+            <textarea
+              value={customerNotes}
+              maxLength={CUSTOMER_NOTES_MAX_LENGTH}
+              rows={3}
+              onChange={(event) => {
+                setHasInteracted(true);
+                setCustomerNotes(event.target.value);
+              }}
+              placeholder="Vehicle fitment, preferred placement, special instructions, or anything we should confirm before building."
+              className="w-full resize-y rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:border-red-600 focus:outline-none"
+            />
+            <p className="mt-1 text-[11px] text-text-muted">
+              We will review these notes with the design before production.
+            </p>
+          </section>
+
           {/* Price + Checkout — visually-final action; sits below the
               Terminal Cup customization. mt-auto pins this card to the
               bottom of the right column wrapper so its bottom edge
@@ -1194,6 +1369,11 @@ export default function CustomEnclosureDesigner() {
               {!canAddToCart && pricing.status === 'ok' && calculations.baffleCheck.status === 'DOES NOT FIT' && (
                 <p className="text-[11px] text-red-400 mb-2">
                   Subwoofer doesn&apos;t fit on the baffle. Adjust width or quantity.
+                </p>
+              )}
+              {pricing.status === 'ok' && calculations.baffleCheck.status !== 'DOES NOT FIT' && !subwooferPlacementSafe && (
+                <p className="text-[11px] text-red-400 mb-2">
+                  The subwoofer position is outside the safe build area. Recenter it or use Snap to safe.
                 </p>
               )}
               {pricing.status === 'unavailable' && (
@@ -1256,6 +1436,7 @@ export default function CustomEnclosureDesigner() {
               <SummaryItem label="Tuning" value={reviewFields.tuning} />
               <SummaryItem label="Port area" value={reviewFields.portArea} />
               <SummaryItem label="Port/cube" value={reviewFields.portPerCube} />
+              <SummaryItem label="Position" value={reviewFields.subPosition} />
               <div className="flex items-baseline gap-1.5">
                 <span className="text-neutral-400">Sub fit</span>
                 <span
@@ -1316,6 +1497,101 @@ export default function CustomEnclosureDesigner() {
             </Field>
           </div>
         </section>
+
+          <section className="bg-neutral-900 border border-neutral-800 rounded-lg p-3 lg:col-start-1">
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                Subwoofer Position
+              </h2>
+              <label className={`flex items-center gap-2 text-xs ${subwooferPositionAvailable ? 'text-neutral-400 cursor-pointer' : 'text-neutral-600 cursor-not-allowed'}`}>
+                <input
+                  type="checkbox"
+                  checked={subwooferPositionCustomized && subwooferPositionAvailable}
+                  disabled={!subwooferPositionAvailable}
+                  onChange={(event) => handleSubwooferPositionEnable(event.target.checked)}
+                  className="accent-red-600"
+                />
+                Customize
+              </label>
+            </div>
+            {!subwooferPositionAvailable ? (
+              <p className="text-[11px] text-text-muted">
+                Position adjustment is available when Subs Up / Port Back is selected. Baffle-mounted subs remain centered.
+              </p>
+            ) : !subwooferPositionCustomized ? (
+              <p className="text-[11px] text-text-muted">
+                The engine automatically centers the pattern and staggers dual subs when needed. Enable Customize to shift the complete pattern.
+              </p>
+            ) : (
+              <>
+                {subwooferOffsetRangeValid ? (
+                  <div className="grid grid-cols-2 gap-3">
+                  <Field label={`X offset${subwooferOffsetRange ? ` (${subwooferOffsetRange.xMin.toFixed(2)} to ${subwooferOffsetRange.xMax.toFixed(2)})` : ''}`}>
+                    <NumberInput
+                      value={inputs.subwooferXOffset ?? 0}
+                      onChange={(value) => {
+                        setHasInteracted(true);
+                        const snapped = roundToEighth(value);
+                        const clamped = subwooferOffsetRange
+                          ? Math.max(subwooferOffsetRange.xMin, Math.min(subwooferOffsetRange.xMax, snapped))
+                          : snapped;
+                        setInputs({ subwooferXOffset: roundOffset(clamped) });
+                      }}
+                      min={subwooferOffsetRange?.xMin}
+                      max={subwooferOffsetRange?.xMax}
+                      step={0.125}
+                    />
+                  </Field>
+                  <Field label={`Y offset${subwooferOffsetRange ? ` (${subwooferOffsetRange.yMin.toFixed(2)} to ${subwooferOffsetRange.yMax.toFixed(2)})` : ''}`}>
+                    <NumberInput
+                      value={inputs.subwooferYOffset ?? 0}
+                      onChange={(value) => {
+                        setHasInteracted(true);
+                        const snapped = roundToEighth(value);
+                        const clamped = subwooferOffsetRange
+                          ? Math.max(subwooferOffsetRange.yMin, Math.min(subwooferOffsetRange.yMax, snapped))
+                          : snapped;
+                        setInputs({ subwooferYOffset: roundOffset(clamped) });
+                      }}
+                      min={subwooferOffsetRange?.yMin}
+                      max={subwooferOffsetRange?.yMax}
+                      step={0.125}
+                    />
+                  </Field>
+                  </div>
+                ) : (
+                  <p className="rounded border border-red-900/60 bg-red-950/40 p-2 text-[11px] text-red-300">
+                    No safe adjustable position exists for these dimensions. Increase the box space or reduce the subwoofer size or quantity.
+                  </p>
+                )}
+                <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                  <p className={`text-[11px] ${subwooferPlacementSafe ? 'text-emerald-300/80' : 'text-red-300'}`}>
+                    {subwooferPlacementSafe
+                      ? 'Placement is inside the customer-safe build area.'
+                      : subwooferPlacementCheck?.conflict?.label ?? 'No safe placement exists for these dimensions.'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSubwooferPositionRecenter}
+                      className="px-2 py-1 rounded border border-neutral-700 hover:bg-neutral-800 text-neutral-200 text-[11px]"
+                    >
+                      Recenter
+                    </button>
+                    {!subwooferPlacementSafe && subwooferOffsetRangeValid && (
+                      <button
+                        type="button"
+                        onClick={handleSubwooferPositionSnap}
+                        className="px-2 py-1 rounded bg-red-700 hover:bg-red-600 text-white text-[11px]"
+                      >
+                        Snap to safe
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
         </div>
       </div>
 
