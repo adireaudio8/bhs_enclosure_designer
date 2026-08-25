@@ -2,7 +2,7 @@
 
 **Prepared:** 2026-08-24
 
-**Status:** Engine parity and approved customer UI parity release validated locally; production deployment pending
+**Status:** Engine parity and approved customer UI parity release committed, deployed, and verified live
 
 **Target engine:** `60c7242b3ca728de48566741019d7ee3713e3e23`
 
@@ -29,6 +29,8 @@ Engine `60c7242` is the `7706706e` package-hardened baseline plus the approved s
 - Historical 2026-08-24 package-hardening baseline: the calculator and website were synchronized at engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` before the later pricing-default release.
 - Before the 2026-08-24 local update, the website tarball exactly matched engine `df2dc9bb28d4425010e28b92cdfa4902584e1d24` from 2026-06-08 and was 48 engine commits behind the calculator.
 - The current website tarball comes from a clean checkout of exact engine commit `60c7242b3ca728de48566741019d7ee3713e3e23`. Its SHA-256 is `663f9d918a890137361ada7a20458ec06250d3a954354140df28a8a1ff715ab7`; the packaged archive is 219,542 bytes. The prior `7706706e` package-hardening release remains the historical baseline.
+- Production commit `50abb89` and Vercel deployment `dpl_5b5b2CmHf73JDMR8jSee3HVNbqU2` reached `READY`. The live health endpoint reported engine `60c7242b3ca728de48566741019d7ee3713e3e23`.
+- The live Shopify page exposed 23 shared brands, applied the stored Adire Brahma 12-inch displacement, rendered customer notes and safe top-panel X/Y positioning, omitted Flat Pack, and limited acrylic choices to 12x12 and 24x12. Live pricing returned Birch `$661.99`, derived MDF `$463.39`, Birch flush `$711.99`, and Birch with a 12x12 window `$736.99` for the controlled Single 12-inch Regular Duty case. Checkout was not submitted, so no draft order was created.
 - The local lockfile now contains the new tarball integrity, `clipper2-ts@2.0.1-18`, and the engine's postprocessing peer metadata. The previously present unrelated lockfile edits were preserved.
 - The production Vercel deployment was created 2026-06-09, consistent with the older designer source and tarball.
 - A clean isolated package of engine `7706706e1eefc7beb98ad8610fd83ca24dfc76e1` was installed into clean calculator and designer worktrees. Engine lint completed with five existing warnings and no errors; engine typecheck and all 525 engine tests passed; all 705 calculator tests passed; all 11 designer regression tests passed; both production builds passed.
