@@ -169,6 +169,7 @@ export default function CustomEnclosureDesigner() {
   const [subwooferCatalog, setSubwooferCatalog] = useState<CustomerSubwooferBrand[]>([]);
   const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [customerNotes, setCustomerNotes] = useState('');
+  const designerRootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (window.parent === window) return;
@@ -180,10 +181,8 @@ export default function CustomEnclosureDesigner() {
       if (disposed || animationFrame !== null) return;
       animationFrame = window.requestAnimationFrame(() => {
         animationFrame = null;
-        const height = Math.ceil(Math.max(
-          document.documentElement.scrollHeight,
-          document.body?.scrollHeight ?? 0,
-        ));
+        const contentHeight = designerRootRef.current?.scrollHeight ?? 0;
+        const height = Math.ceil(Math.max(480, contentHeight));
         if (!Number.isFinite(height) || height < 480 || height > 12000) return;
         if (Math.abs(height - lastHeight) < 2) return;
         lastHeight = height;
@@ -193,8 +192,7 @@ export default function CustomEnclosureDesigner() {
 
     reportHeight();
     const observer = new ResizeObserver(reportHeight);
-    observer.observe(document.documentElement);
-    if (document.body) observer.observe(document.body);
+    if (designerRootRef.current) observer.observe(designerRootRef.current);
     window.addEventListener('load', reportHeight);
     window.addEventListener('resize', reportHeight);
     document.fonts?.ready.then(reportHeight).catch(() => undefined);
@@ -758,7 +756,7 @@ export default function CustomEnclosureDesigner() {
   }, [calculations, inputs, subwooferPlacementSafe, subwooferPositionAvailable]);
 
   return (
-    <div className="bg-neutral-950 text-white">
+    <div ref={designerRootRef} data-bhs-designer-root className="bg-neutral-950 text-white">
       {/* Compact hero — padding kept tight so the grid below has more
           headroom on small-laptop viewports. */}
       <header className="border-b border-neutral-800">
