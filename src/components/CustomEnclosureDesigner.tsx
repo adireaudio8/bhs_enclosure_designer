@@ -67,6 +67,13 @@ import {
   type CustomerSubwooferModel,
 } from '@/lib/subwoofer-catalog';
 import { CUSTOMER_NOTES_MAX_LENGTH } from '@/lib/customer-notes';
+import {
+  CUSTOM_LOGO_REQUEST_MAX_LENGTH,
+  TOP_LOGO_CUSTOM,
+  TOP_LOGO_MATCH_BRAND,
+  TOP_LOGO_NONE,
+  resolveTopLogoRequest,
+} from '@/lib/top-logo-request';
 
 // Engine's 3D viewer — load client-side only; Three.js requires `window`.
 const EnclosureViewer3D = dynamic(
@@ -169,6 +176,9 @@ export default function CustomEnclosureDesigner() {
   const [subwooferCatalog, setSubwooferCatalog] = useState<CustomerSubwooferBrand[]>([]);
   const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [customerNotes, setCustomerNotes] = useState('');
+  const [logoOptions, setLogoOptions] = useState<string[]>([]);
+  const [topLogoSelection, setTopLogoSelection] = useState(TOP_LOGO_MATCH_BRAND);
+  const [customLogoRequest, setCustomLogoRequest] = useState('');
   const designerRootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -213,16 +223,21 @@ export default function CustomEnclosureDesigner() {
     fetch(appApi('subwoofer-catalog'))
       .then(async (response) => {
         if (!response.ok) throw new Error(`Catalog lookup failed (${response.status}).`);
-        return response.json() as Promise<{ brands?: CustomerSubwooferBrand[] }>;
+        return response.json() as Promise<{
+          brands?: CustomerSubwooferBrand[];
+          logoOptions?: string[];
+        }>;
       })
       .then((data) => {
         if (cancelled) return;
         setSubwooferCatalog(Array.isArray(data.brands) ? data.brands : []);
+        setLogoOptions(Array.isArray(data.logoOptions) ? data.logoOptions : []);
         setCatalogState('ready');
       })
       .catch(() => {
         if (cancelled) return;
         setSubwooferCatalog([]);
+        setLogoOptions([]);
         setCatalogState('error');
       });
     return () => {
@@ -438,10 +453,16 @@ export default function CustomEnclosureDesigner() {
     : null;
   const subwooferPlacementSafe = subwooferPlacementCheck?.safe ?? true;
 
+  const resolvedTopLogoRequest = resolveTopLogoRequest(
+    topLogoSelection,
+    customLogoRequest,
+    inputs.subwooferBrand,
+  );
   const canAddToCart =
     pricing.status === 'ok' &&
     calculations.baffleCheck.status !== 'DOES NOT FIT' &&
-    subwooferPlacementSafe;
+    subwooferPlacementSafe &&
+    resolvedTopLogoRequest.valid;
 
   function handleSubwooferPositionEnable(enabled: boolean) {
     setHasInteracted(true);
@@ -615,20 +636,26 @@ export default function CustomEnclosureDesigner() {
     }
   }
 
-  // ─── Logo fetch on brand change ───────────────────────────────────────
+  // ─── Logo fetch on top-logo selection change ──────────────────────────
   // 3D viewer auto-renders the logo (debossed on the baffle) when both
   // selectedLogoName and logoEpsContent are set. We just have to fetch
   // the EPS content from Supabase via the app-proxy brand-logo route.
   // If the route returns 404/503/etc, we silently skip — viewer still
   // works without a logo.
   useEffect(() => {
-    if (!inputs.subwooferBrand) {
+    const selectedBrand = topLogoSelection === TOP_LOGO_MATCH_BRAND
+      ? inputs.subwooferBrand
+      : topLogoSelection === TOP_LOGO_NONE || topLogoSelection === TOP_LOGO_CUSTOM
+        ? ''
+        : topLogoSelection;
+
+    if (!selectedBrand) {
       setSelectedLogoName('None');
       setLogoEpsContent(null);
       return;
     }
     let cancelled = false;
-    const brand = inputs.subwooferBrand;
+    const brand = selectedBrand;
 
     fetch(appApi(`brand-logo/${encodeURIComponent(brand)}`))
       .then(async (res) => (res.ok ? res.json() : null))
@@ -651,7 +678,12 @@ export default function CustomEnclosureDesigner() {
     return () => {
       cancelled = true;
     };
-  }, [inputs.subwooferBrand, setSelectedLogoName, setLogoEpsContent]);
+  }, [
+    inputs.subwooferBrand,
+    setSelectedLogoName,
+    setLogoEpsContent,
+    topLogoSelection,
+  ]);
 
   // ─── Checkout handler ─────────────────────────────────────────────────
   const router = useRouter();
@@ -690,6 +722,8 @@ export default function CustomEnclosureDesigner() {
       plexiWindow: inputs.windowEnabled
         ? `${inputs.windowSize ?? '12x12'} ${inputs.windowOrientation ?? 'landscape'} on ${resolveWindowPanel(inputs)}`
         : 'None',
+      topLogoSelection,
+      customLogoRequest,
     };
 
     // Fire the standard "AddToCart" event BEFORE the API call so we
@@ -979,6 +1013,65 @@ export default function CustomEnclosureDesigner() {
                     ))}
                   </select>
                 </Field>
+              </div>
+
+              <div className="mt-2 pt-2 border-t border-neutral-800">
+                <Field label="Top logo">
+                  <select
+                    className="select-base"
+                    value={topLogoSelection}
+                    onChange={(event) => {
+                      setHasInteracted(true);
+                      setTopLogoSelection(event.target.value);
+                    }}
+                  >
+                    <option value={TOP_LOGO_MATCH_BRAND}>
+                      Match subwoofer brand
+                      {inputs.subwooferBrand ? ` (${inputs.subwooferBrand})` : ''}
+                    </option>
+                    <option value={TOP_LOGO_NONE}>No top logo</option>
+                    {logoOptions.length > 0 && (
+                      <option value="" disabled>Available brand logos</option>
+                    )}
+                    {logoOptions.map((logoName) => (
+                      <option key={logoName} value={logoName}>
+                        {logoName}
+                      </option>
+                    ))}
+                    <option value={TOP_LOGO_CUSTOM}>Custom request…</option>
+                  </select>
+                </Field>
+                {topLogoSelection === TOP_LOGO_CUSTOM && (
+                  <div className="mt-2 rounded-md border border-amber-700/50 bg-amber-950/20 p-3">
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                      <label
+                        htmlFor="custom-top-logo-request"
+                        className="text-xs font-medium uppercase tracking-wide text-amber-100"
+                      >
+                        Describe your custom logo
+                      </label>
+                      <span className="text-[10px] text-amber-200/60">
+                        {customLogoRequest.length}/{CUSTOM_LOGO_REQUEST_MAX_LENGTH}
+                      </span>
+                    </div>
+                    <textarea
+                      id="custom-top-logo-request"
+                      value={customLogoRequest}
+                      maxLength={CUSTOM_LOGO_REQUEST_MAX_LENGTH}
+                      rows={2}
+                      required
+                      onChange={(event) => {
+                        setHasInteracted(true);
+                        setCustomLogoRequest(event.target.value);
+                      }}
+                      placeholder="Example: Smith Audio in block letters, or our club logo. We will contact you for artwork if needed."
+                      className="w-full resize-y rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:border-amber-500 focus:outline-none"
+                    />
+                    <p className="mt-1 text-[11px] text-amber-100/70">
+                      The preview stays blank for a custom request. We will confirm the artwork with you before production.
+                    </p>
+                  </div>
+                )}
               </div>
               {catalogState === 'error' && (
                 <p className="mt-1.5 text-[11px] text-amber-300/80">
@@ -1413,6 +1506,11 @@ export default function CustomEnclosureDesigner() {
               {pricing.status === 'ok' && calculations.baffleCheck.status !== 'DOES NOT FIT' && !subwooferPlacementSafe && (
                 <p className="text-[11px] text-red-400 mb-2">
                   The subwoofer position is outside the safe build area. Recenter it or use Snap to safe.
+                </p>
+              )}
+              {pricing.status === 'ok' && topLogoSelection === TOP_LOGO_CUSTOM && !resolvedTopLogoRequest.valid && (
+                <p className="text-[11px] text-red-400 mb-2">
+                  Describe the custom top logo before continuing to checkout.
                 </p>
               )}
               {pricing.status === 'unavailable' && (

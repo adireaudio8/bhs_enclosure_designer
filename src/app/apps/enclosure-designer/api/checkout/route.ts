@@ -16,6 +16,7 @@ import {
 import { getEnclosureEngineRevision } from '@/lib/enclosure-engine-provenance';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 import { normalizeCustomerNotes } from '@/lib/customer-notes';
+import { resolveTopLogoRequest } from '@/lib/top-logo-request';
 
 export const runtime = 'nodejs';
 
@@ -35,6 +36,8 @@ interface DesignSpecs {
   portArea: number;
   flushMount?: boolean;
   plexiWindow?: string;
+  topLogoSelection?: unknown;
+  customLogoRequest?: unknown;
 }
 
 interface CheckoutRequest {
@@ -140,6 +143,17 @@ export async function POST(req: Request) {
   const inputs = sanitizeCustomerEnclosureInputs(body.inputs);
   const customerNotes = normalizeCustomerNotes(body.customerNotes);
   const engineRevision = getEnclosureEngineRevision();
+  const topLogo = resolveTopLogoRequest(
+    body.designSpecs.topLogoSelection,
+    body.designSpecs.customLogoRequest,
+    inputs.subwooferBrand ?? body.designSpecs.brand,
+  );
+  if (!topLogo.valid) {
+    return NextResponse.json(
+      { error: 'Describe the custom top logo before continuing to checkout.' },
+      { status: 422 },
+    );
+  }
 
   let validated;
   try {
@@ -156,6 +170,8 @@ export async function POST(req: Request) {
     brand: String(inputs.subwooferBrand ?? body.designSpecs.brand ?? '').trim(),
     model: String(inputs.subwooferModel ?? body.designSpecs.model ?? '').trim(),
     modelName: String(body.designSpecs.modelName ?? '').trim().slice(0, 120),
+    topLogoSelection: topLogo.selection,
+    customLogoRequest: topLogo.customRequest,
   };
   let calculations;
   try {
@@ -233,6 +249,7 @@ export async function POST(req: Request) {
     `Subwoofer position: ${subwooferPlacement ? `${subwooferPlacement.safe ? 'Safe' : 'Unsafe'}; offset X ${signedInch(inputs.subwooferXOffset ?? 0)}, Y ${signedInch(inputs.subwooferYOffset ?? 0)}` : 'Centered on baffle'}`,
     `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
+    `Top logo: ${topLogo.displayLabel}`,
     `Terminal cup: ${terminalPanel}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; Y fixed 2.125" from panel bottom`,
     `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
     `Pricing tier: ${validated.tier}`,
@@ -279,6 +296,12 @@ export async function POST(req: Request) {
       windowDimensions,
       windowXOffset: round(inputs.windowXOffset ?? 0, 3),
       windowYOffset: round(inputs.windowYOffset ?? 0, 3),
+      topLogo: {
+        mode: topLogo.mode,
+        logoName: topLogo.logoName,
+        customRequest: topLogo.customRequest,
+        displayLabel: topLogo.displayLabel,
+      },
       subwooferPositionCustomized:
         inputs.subwooferXOffset !== undefined || inputs.subwooferYOffset !== undefined,
       subwooferXOffset: round(inputs.subwooferXOffset ?? 0, 3),
@@ -304,7 +327,11 @@ export async function POST(req: Request) {
     attr('Tuning', `${specs.tuningFreq} Hz`),
     attr('Flush mount', specs.flushMount ? 'Yes' : 'No'),
     attr('Plexi window', windowEnabled ? windowSize : 'None'),
+    attr('Top logo', topLogo.displayLabel),
   ];
+  if (topLogo.mode === 'custom') {
+    lineAttributes.push(attr('Custom logo request', topLogo.customRequest));
+  }
 
   try {
     const data = await shopifyAdminGraphQL<{
@@ -331,6 +358,7 @@ export async function POST(req: Request) {
         input: {
           note: [
             `Custom enclosure designer request: ${designSummary}`,
+            `Top logo: ${topLogo.displayLabel}`,
             customerNotes ? `Customer notes:\n${customerNotes}` : null,
             'Internal build details are stored in draft order metafields under bhs_build.',
           ].filter(Boolean).join('\n\n'),

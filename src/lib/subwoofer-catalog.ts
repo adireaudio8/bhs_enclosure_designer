@@ -4,6 +4,7 @@ export interface BrandCatalogRow {
   name?: unknown;
   code?: unknown;
   model_codes?: unknown;
+  logo_path?: unknown;
 }
 
 export interface SubwooferCatalogRow {
@@ -146,6 +147,18 @@ export function buildCustomerSubwooferCatalog(
     })
     .filter((brand) => brand.name && brand.models.length > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function buildCustomerLogoOptions(brandRows: BrandCatalogRow[]) {
+  const byName = new Map<string, string>();
+  for (const brand of brandRows) {
+    if (typeof brand.logo_path !== 'string' || !brand.logo_path.trim()) continue;
+    const name = String(brand.name ?? '').trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (!byName.has(key)) byName.set(key, name);
+  }
+  return [...byName.values()].sort((a, b) => a.localeCompare(b));
 }
 
 export function findCustomerModelVariant(

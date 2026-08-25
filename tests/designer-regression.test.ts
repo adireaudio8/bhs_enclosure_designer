@@ -13,6 +13,13 @@ import {
   normalizeCustomerNotes,
 } from '../src/lib/customer-notes';
 import { renderDesignerProxyWrapper } from '../src/lib/proxy-wrapper';
+import {
+  CUSTOM_LOGO_REQUEST_MAX_LENGTH,
+  TOP_LOGO_CUSTOM,
+  TOP_LOGO_MATCH_BRAND,
+  TOP_LOGO_NONE,
+  resolveTopLogoRequest,
+} from '../src/lib/top-logo-request';
 
 const normalInputs: EnclosureInputs = {
   ...DEFAULT_INPUTS,
@@ -104,6 +111,48 @@ describe('customer enclosure regression boundary', () => {
     expect(normalizeCustomerNotes('x'.repeat(CUSTOMER_NOTES_MAX_LENGTH + 50))).toHaveLength(
       CUSTOMER_NOTES_MAX_LENGTH,
     );
+  });
+
+  it('defaults the top logo to the selected subwoofer brand for older clients', () => {
+    expect(resolveTopLogoRequest(undefined, undefined, 'Sundown Audio')).toMatchObject({
+      selection: TOP_LOGO_MATCH_BRAND,
+      mode: 'match-brand',
+      logoName: 'Sundown Audio',
+      customRequest: '',
+      valid: true,
+    });
+  });
+
+  it('supports no-logo and explicit brand-logo selections', () => {
+    expect(resolveTopLogoRequest(TOP_LOGO_NONE, 'ignored', 'Sundown Audio')).toMatchObject({
+      mode: 'none',
+      logoName: '',
+      customRequest: '',
+      valid: true,
+    });
+    expect(resolveTopLogoRequest('JL Audio', '', 'Sundown Audio')).toMatchObject({
+      mode: 'brand',
+      logoName: 'JL Audio',
+      displayLabel: 'JL Audio',
+      valid: true,
+    });
+  });
+
+  it('requires, sanitizes, and bounds a custom top-logo request', () => {
+    expect(resolveTopLogoRequest(TOP_LOGO_CUSTOM, '   ', 'Sundown Audio').valid).toBe(false);
+
+    const resolved = resolveTopLogoRequest(
+      TOP_LOGO_CUSTOM,
+      `  Smith Audio\r\n\u0000${'x'.repeat(CUSTOM_LOGO_REQUEST_MAX_LENGTH + 50)}  `,
+      'Sundown Audio',
+    );
+    expect(resolved).toMatchObject({
+      mode: 'custom',
+      logoName: '',
+      valid: true,
+    });
+    expect(resolved.customRequest).toHaveLength(CUSTOM_LOGO_REQUEST_MAX_LENGTH);
+    expect(resolved.customRequest).not.toMatch(/[\r\n\u0000]/);
   });
 
   it.each([undefined, null, 0, -1, Number.NaN, Number.POSITIVE_INFINITY, 'not-a-price'])(
