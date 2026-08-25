@@ -63,6 +63,8 @@ To refresh the vendored engine:
 
 **Customer UI parity release deployed 2026-08-24:** production commit `50abb89` and Vercel deployment `dpl_5b5b2CmHf73JDMR8jSee3HVNbqU2` put the shared Supabase brand/model directory, authoritative model-and-size measurement application, customer-safe Subs Up / Port Back X/Y positioning, and customer build notes live. The server boundary forces Press Together construction, rejects customer control of manual kerf/labyrinth behavior, and limits acrylic windows to the standard 12x12 and 24x12 choices. Flat Pack is not offered. Custom acrylic dimensions remain deferred. The shared measurement rows are intentionally treated as sparse: missing model dimensions use clearly labeled, editable size defaults rather than being represented as model-specific data. The live health endpoint reported engine `60c7242b3ca728de48566741019d7ee3713e3e23`, and controlled pricing checks returned Birch `$661.99`, derived MDF `$463.39`, flush `+$50.00`, and standard 12x12 acrylic `+$75.00` without creating a Shopify draft order.
 
+**Single-scroll Shopify embed deployed 2026-08-24:** designer commits `2adcc13` and `ccad39b`, theme commit `83e4c12`, and Vercel deployment `dpl_9NtxwyMTEZdSwCvJc6UvZuDYmRW4` replace the two fixed-height iframe viewports with a content-height relay. Both iframe layers disable their own scrollbar while the Shopify page remains the single scroll surface. Live expansion testing resized both layers from 1,227 px to 1,458 px and back to 1,227 px.
+
 ## Shopify app proxy
 
 Configure the custom app proxy in Shopify Dev Dashboard after the app is deployed to Vercel:
