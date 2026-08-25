@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildCustomerLogoOptions,
+  buildCustomerLogoChoices,
   buildCustomerSubwooferCatalog,
   findCustomerModelVariant,
 } from '../src/lib/subwoofer-catalog';
 
 describe('customer subwoofer catalog', () => {
-  it('lists only stored brand logos and removes duplicate names', () => {
-    expect(buildCustomerLogoOptions([
-      { name: 'Sundown Audio', logo_path: 'brands/1/sundown.eps' },
-      { name: 'sundown audio', logo_path: 'brands/2/duplicate.eps' },
-      { name: 'JL Audio', logo_path: 'brands/3/jl.eps' },
-      { name: 'No Artwork', logo_path: null },
-      { name: 'Blank Path', logo_path: '   ' },
+  it('lists the shared brand directory and removes duplicate names', () => {
+    expect(buildCustomerLogoChoices([
+      { name: 'Sundown Audio' },
+      { name: 'sundown audio' },
+      { name: 'JL Audio' },
+      { name: '  ' },
     ])).toEqual(['JL Audio', 'Sundown Audio']);
   });
 

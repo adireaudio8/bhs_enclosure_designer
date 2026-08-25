@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAppProxyContext } from '@/lib/app-proxy';
 import {
-  buildCustomerLogoOptions,
+  buildCustomerLogoChoices,
   buildCustomerSubwooferCatalog,
   type BrandCatalogRow,
   type SubwooferCatalogRow,
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   try {
     const [brands, subwoofers] = await Promise.all([
       readTable<BrandCatalogRow>(
-        'brands?select=name,code,model_codes,logo_path&order=name.asc',
+        'brands?select=name,code,model_codes&order=name.asc',
       ),
       readTable<SubwooferCatalogRow>(
         'subwoofers?select=brand,model_name,model_code,diameter,displacement,cutout_diameter,outside_diameter,mounting_depth,is_retired&order=brand.asc,model_name.asc',
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({
       brands: buildCustomerSubwooferCatalog(brands, subwoofers),
-      logoOptions: buildCustomerLogoOptions(brands),
+      logoOptions: buildCustomerLogoChoices(brands),
     });
   } catch (error) {
     console.error('[subwoofer-catalog] lookup failed', error);

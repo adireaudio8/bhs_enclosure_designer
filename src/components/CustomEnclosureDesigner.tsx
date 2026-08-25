@@ -1031,7 +1031,7 @@ export default function CustomEnclosureDesigner() {
                     </option>
                     <option value={TOP_LOGO_NONE}>No top logo</option>
                     {logoOptions.length > 0 && (
-                      <option value="" disabled>Available brand logos</option>
+                      <option value="" disabled>Brand logos</option>
                     )}
                     {logoOptions.map((logoName) => (
                       <option key={logoName} value={logoName}>
@@ -1041,6 +1041,11 @@ export default function CustomEnclosureDesigner() {
                     <option value={TOP_LOGO_CUSTOM}>Custom request…</option>
                   </select>
                 </Field>
+                {topLogoSelection !== TOP_LOGO_CUSTOM && topLogoSelection !== TOP_LOGO_NONE && (
+                  <p className="mt-1 text-[11px] text-text-muted">
+                    Stored artwork appears in the preview when available. Your selected logo name is always included with the order.
+                  </p>
+                )}
                 {topLogoSelection === TOP_LOGO_CUSTOM && (
                   <div className="mt-2 rounded-md border border-amber-700/50 bg-amber-950/20 p-3">
                     <div className="mb-1.5 flex items-baseline justify-between gap-3">

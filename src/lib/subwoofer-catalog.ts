@@ -4,7 +4,6 @@ export interface BrandCatalogRow {
   name?: unknown;
   code?: unknown;
   model_codes?: unknown;
-  logo_path?: unknown;
 }
 
 export interface SubwooferCatalogRow {
@@ -149,10 +148,9 @@ export function buildCustomerSubwooferCatalog(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function buildCustomerLogoOptions(brandRows: BrandCatalogRow[]) {
+export function buildCustomerLogoChoices(brandRows: BrandCatalogRow[]) {
   const byName = new Map<string, string>();
   for (const brand of brandRows) {
-    if (typeof brand.logo_path !== 'string' || !brand.logo_path.trim()) continue;
     const name = String(brand.name ?? '').trim();
     if (!name) continue;
     const key = name.toLowerCase();

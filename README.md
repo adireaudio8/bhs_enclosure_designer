@@ -115,7 +115,7 @@ Recommended Admin API scopes:
 
 The browser never controls price. The checkout endpoint revalidates the design through `/apps/enclosure-designer/api/design-pricing`, creates a Shopify draft order with a custom-priced line item, then redirects the customer to the draft order invoice URL.
 
-Customer build notes are normalized and length-limited, then written to the draft-order note and private `bhs_build` production fields. The Top logo control can follow the subwoofer brand, use another available stored brand logo, omit the logo, or collect a required custom-logo description. Custom artwork is not fabricated in the browser preview; its normalized request is carried into the Shopify line attributes, draft note, and private production snapshot for follow-up before production. Subwoofer placement and baffle fit are recalculated server-side before a draft order can be created. Crafted requests cannot enable Flat Pack, manual kerf/labyrinth controls, custom acrylic dimensions, or an empty custom-logo request.
+Customer build notes are normalized and length-limited, then written to the draft-order note and private `bhs_build` production fields. The Top logo control can follow the subwoofer brand, use another brand from the shared directory, omit the logo, or collect a required custom-logo description. Stored EPS artwork renders in the preview when available; a selected brand name is still included with the order when artwork is not available to preview. Custom artwork is not fabricated in the browser preview; its normalized request is carried into the Shopify line attributes, draft note, and private production snapshot for follow-up before production. Subwoofer placement and baffle fit are recalculated server-side before a draft order can be created. Crafted requests cannot enable Flat Pack, manual kerf/labyrinth controls, custom acrylic dimensions, or an empty custom-logo request.
 
 Before switching storefront navigation to this app, test:
 
@@ -125,7 +125,7 @@ Before switching storefront navigation to this app, test:
 - Supabase pricing returns the expected MAP/dealer values.
 - Logged-in customer tags resolve customer/dealer/distributor tier correctly.
 - Brand logo EPS lookup works or fails gracefully.
-- Top logo supports matching the subwoofer brand, another available stored logo, no logo, and a required custom request that reaches Shopify production data.
+- Top logo supports matching the subwoofer brand, another brand from the shared directory, no logo, and a required custom request that reaches Shopify production data.
 - Shared brand/model catalog loads from Supabase; missing model measurements are disclosed as editable size fallbacks.
 - Model selection applies any stored model-and-size cutout, outside-diameter, displacement, and mounting-depth values.
 - Subs Up / Port Back positioning can recenter and snap to a safe build area; unsafe placement blocks checkout.
