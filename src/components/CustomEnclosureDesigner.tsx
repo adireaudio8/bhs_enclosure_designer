@@ -84,6 +84,7 @@ const EnclosureViewer3D = dynamic(
 const APP_PROXY_BASE =
   process.env.NEXT_PUBLIC_APP_PROXY_BASE_PATH || '/apps/enclosure-designer';
 const TOP_NAVIGATION_MESSAGE = 'bhs:navigate-top';
+const FRAME_RESIZE_MESSAGE = 'bhs:designer-resize';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -168,6 +169,46 @@ export default function CustomEnclosureDesigner() {
   const [subwooferCatalog, setSubwooferCatalog] = useState<CustomerSubwooferBrand[]>([]);
   const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [customerNotes, setCustomerNotes] = useState('');
+
+  useEffect(() => {
+    if (window.parent === window) return;
+
+    let disposed = false;
+    let animationFrame: number | null = null;
+    let lastHeight = 0;
+    const reportHeight = () => {
+      if (disposed || animationFrame !== null) return;
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = null;
+        const height = Math.ceil(Math.max(
+          document.documentElement.scrollHeight,
+          document.body?.scrollHeight ?? 0,
+        ));
+        if (!Number.isFinite(height) || height < 480 || height > 12000) return;
+        if (Math.abs(height - lastHeight) < 2) return;
+        lastHeight = height;
+        window.parent.postMessage({ type: FRAME_RESIZE_MESSAGE, height }, '*');
+      });
+    };
+
+    reportHeight();
+    const observer = new ResizeObserver(reportHeight);
+    observer.observe(document.documentElement);
+    if (document.body) observer.observe(document.body);
+    window.addEventListener('load', reportHeight);
+    window.addEventListener('resize', reportHeight);
+    document.fonts?.ready.then(reportHeight).catch(() => undefined);
+    const followUp = window.setTimeout(reportHeight, 500);
+
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      window.removeEventListener('load', reportHeight);
+      window.removeEventListener('resize', reportHeight);
+      window.clearTimeout(followUp);
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

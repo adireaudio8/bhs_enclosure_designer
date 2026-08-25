@@ -20,6 +20,9 @@ export function renderDesignerProxyWrapper(
   const checkoutNavigationScript = `<script>
       (function() {
         var designerOrigin = ${JSON.stringify(designerUrl.origin)};
+        var resizeMessage = 'bhs:designer-resize';
+        var minimumHeight = 480;
+        var maximumHeight = 12000;
         function checkoutUrl(value) {
           try {
             var target = new URL(value);
@@ -42,6 +45,17 @@ export function renderDesignerProxyWrapper(
         window.addEventListener('message', function(event) {
           if (event.origin !== designerOrigin) return;
           var data = event.data || {};
+          if (data.type === resizeMessage) {
+            var height = Math.ceil(Number(data.height));
+            if (!Number.isFinite(height) || height < minimumHeight || height > maximumHeight) return;
+            var designerFrame = document.getElementById('bhs-designer-frame');
+            if (!designerFrame) return;
+            designerFrame.style.height = height + 'px';
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: resizeMessage, height: height }, '*');
+            }
+            return;
+          }
           if (data.type !== 'bhs:navigate-top' || typeof data.url !== 'string') return;
           var target = checkoutUrl(data.url);
           if (!target) return;
@@ -70,9 +84,6 @@ export function renderDesignerProxyWrapper(
         margin: 0;
         min-height: 100%;
         background: #050505;
-      }
-
-      body {
         overflow: hidden;
       }
 
@@ -81,6 +92,7 @@ export function renderDesignerProxyWrapper(
         display: block;
         width: 100vw;
         height: 100vh;
+        min-height: 480px;
         background: #050505;
       }
     </style>
@@ -89,9 +101,11 @@ export function renderDesignerProxyWrapper(
   </head>
   <body>
     <iframe
+      id="bhs-designer-frame"
       src="${htmlEscape(designerUrl.toString())}"
       title="Basshead Supply custom enclosure designer"
       allow="clipboard-write; fullscreen; payment"
+      scrolling="no"
     ></iframe>
   </body>
 </html>`,

@@ -12,6 +12,7 @@ import {
   CUSTOMER_NOTES_MAX_LENGTH,
   normalizeCustomerNotes,
 } from '../src/lib/customer-notes';
+import { renderDesignerProxyWrapper } from '../src/lib/proxy-wrapper';
 
 const normalInputs: EnclosureInputs = {
   ...DEFAULT_INPUTS,
@@ -114,5 +115,17 @@ describe('customer enclosure regression boundary', () => {
 
   it('accepts only a positive finite online price', () => {
     expect(resolvePositiveOnlinePrice(354.99)).toBe(354.99);
+  });
+
+  it('relays embedded designer height and suppresses the nested scrollbar', async () => {
+    const response = renderDesignerProxyWrapper(
+      new Request('https://bhsenclosuredesigner.vercel.app/shopify/enclosure-designer?embedded=1'),
+    );
+    const html = await response.text();
+
+    expect(html).toContain("var resizeMessage = 'bhs:designer-resize'");
+    expect(html).toContain("window.parent.postMessage({ type: resizeMessage, height: height }, '*')");
+    expect(html).toContain('id="bhs-designer-frame"');
+    expect(html).toContain('scrolling="no"');
   });
 });
