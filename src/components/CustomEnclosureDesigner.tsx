@@ -1029,6 +1029,7 @@ export default function CustomEnclosureDesigner() {
                       Match subwoofer brand
                       {inputs.subwooferBrand ? ` (${inputs.subwooferBrand})` : ''}
                     </option>
+                    <option value={TOP_LOGO_CUSTOM}>Custom request…</option>
                     <option value={TOP_LOGO_NONE}>No top logo</option>
                     {logoOptions.length > 0 && (
                       <option value="" disabled>Brand logos</option>
@@ -1038,7 +1039,6 @@ export default function CustomEnclosureDesigner() {
                         {logoName}
                       </option>
                     ))}
-                    <option value={TOP_LOGO_CUSTOM}>Custom request…</option>
                   </select>
                 </Field>
                 {topLogoSelection !== TOP_LOGO_CUSTOM && topLogoSelection !== TOP_LOGO_NONE && (
