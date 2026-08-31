@@ -1,16 +1,24 @@
 # Website Engine Parity Update Proposal
 
-**Prepared:** 2026-08-24
+**Prepared:** 2026-08-24; current target refreshed 2026-08-31
 
-**Status:** Engine parity and approved customer UI parity release committed, deployed, and verified live
+**Status:** Engine `1832cc7` parity packaged and locally validated; GitHub push, production deployment, and live verification pending
 
-**Target engine:** `60c7242b3ca728de48566741019d7ee3713e3e23`
+**Target engine:** `1832cc78eef94cdb558a4dae5668e2a735780b7e`
 
 ## Required outcome
 
-Keep the customer website designer and the internal calculator on the same full `enclosure-engine` revision. Both consumers must use `60c7242b3ca728de48566741019d7ee3713e3e23`; future engine releases must update, validate, and deploy both consumers as one coordinated release.
+Keep the customer website designer and the internal calculator on the same full `enclosure-engine` revision. Both consumers must use `1832cc78eef94cdb558a4dae5668e2a735780b7e`; future engine releases must update, validate, and deploy both consumers as one coordinated release.
 
 This is shared-engine parity, not identical UI parity. The customer designer should continue hiding manufacturing-only calculations, costs, cut lists, DXF/ACC/CNC exports, glue tolerance, manual kerf setup, and manual labyrinth controls unless those surfaces are separately approved for customers.
+
+## Current 2026-08-31 parity release
+
+- The calculator already pins engine `1832cc78eef94cdb558a4dae5668e2a735780b7e`.
+- The designer sync workflow packaged that exact clean commit, recorded its provenance and SHA-256, refreshed the same-path file dependency, and passed the built-in cross-app parity check.
+- TypeScript and the production Next.js build passed. The designer regression test suite must also pass before commit.
+- This engine revision adds the canonical standard-carton formula with the original dimensional allowances plus 3.3 mm clearance on each opposing side. The website has no manufacturing carton UI, but engine parity remains mandatory.
+- The detailed `60c7242` rollout evidence below is retained as the previous verified production baseline; it is not the current repository target.
 
 ## Approved customer UI scope — 2026-08-24
 
@@ -22,7 +30,7 @@ This is shared-engine parity, not identical UI parity. The customer designer sho
 - Keep custom acrylic dimensions deferred. Customers may use only 12x12 or 24x12 standard windows; custom dimensions are cleared at the server boundary.
 - Keep manual kerf and manual labyrinth controls internal. Automatic extended port routing and its customer-safe status remain supported.
 
-Engine `60c7242` is the `7706706e` package-hardened baseline plus the approved series/material pricing-default alignment. The designer tarball, revision marker, SHA-256 marker, installed package, and calculator pin must all match this full revision before deployment.
+The prior engine `60c7242` release was the `7706706e` package-hardened baseline plus the approved series/material pricing-default alignment. Its evidence below remains historical; the current target is `1832cc7`.
 
 ## Verified baseline
 
@@ -41,7 +49,7 @@ Engine `60c7242` is the `7706706e` package-hardened baseline plus the approved s
 
 ## Phase 1 — Required package parity
 
-1. Package engine `60c7242b3ca728de48566741019d7ee3713e3e23` from a clean checkout of that exact commit. Do not pack a dirty engine working tree.
+1. Package engine `1832cc78eef94cdb558a4dae5668e2a735780b7e` from a clean checkout of that exact commit. Do not pack a dirty engine working tree.
 2. Replace `vendor/adireaudio-enclosure-engine-0.0.0.tgz`.
 3. Refresh the dependency with the explicit file spec:
 

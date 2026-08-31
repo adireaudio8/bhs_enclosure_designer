@@ -39,7 +39,7 @@ The website UI intentionally exposes a customer-safe subset of the internal Desi
 Current coordinated engine revision:
 
 ```text
-60c7242b3ca728de48566741019d7ee3713e3e23
+1832cc78eef94cdb558a4dae5668e2a735780b7e
 ```
 
 To refresh the vendored engine:
@@ -56,6 +56,8 @@ To refresh the vendored engine:
 4. Push `main`, deploy production Vercel, verify the health endpoint reports the new revision, and complete the customer regression checklist below.
 
 `npm run verify:engine-parity` is also part of `npm run check`. It fails when the recorded revision, tarball hash, package dependency, lockfile integrity, or installed package differs. Pass `--calculator-package <path>` when performing a coordinated cross-app release so it also verifies the calculator's exact Git pin.
+
+**Carton-clearance parity prepared 2026-08-31:** the repository now vendors exact engine `1832cc78eef94cdb558a4dae5668e2a735780b7e`, matching the calculator's published pin and including the standard-carton 3.3 mm-per-side clearance rule. The clean sync workflow verified the package, lockfile, tarball hash, installed source, calculator pin, TypeScript, and production build. Production deployment and live health/UI verification are recorded separately after the GitHub push; until that evidence exists, the 2026-08-24 live entries below remain the last confirmed production state.
 
 **Engine parity rollout completed 2026-08-24:** production commit `14842b9` vendors engine `910f804299e006ff0f6ce94d09b1a321fb58970a`, matching the calculator. Clean install, typecheck, and production build passed; Vercel deployment `dpl_GG4ktQMiFwxg481pkgx7VMTJxi6B` reached `READY`; the direct health endpoint and live Shopify designer route returned `200`; and the loaded designer showed configuration, pricing, dimensions, and no browser console errors.
 
