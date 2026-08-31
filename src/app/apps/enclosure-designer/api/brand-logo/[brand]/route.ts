@@ -8,7 +8,7 @@
  *
  * Env vars required:
  *   - NEXT_PUBLIC_SUPABASE_URL
- *   - SUPABASE_SERVICE_ROLE_KEY
+ *   - SUPABASE_SECRET_KEY
  *
  * Both should be the same values the calculator uses (the brands table
  * + logo Storage bucket are shared). If they're missing, this route
@@ -23,9 +23,10 @@
  */
 
 import { NextResponse } from 'next/server';
+import { SUPABASE_SERVER_KEY, supabaseServerHeaders } from '@/lib/supabase-server';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+const SUPABASE_KEY = SUPABASE_SERVER_KEY;
 
 export const runtime = 'nodejs';
 
@@ -38,7 +39,7 @@ export async function GET(
       {
         error: 'Supabase env vars not set',
         detail:
-          'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel (same values as the calculator project uses).',
+          'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in Vercel.',
       },
       { status: 503 },
     );
@@ -54,10 +55,7 @@ export async function GET(
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/brands?name=eq.${encodeURIComponent(brand)}&select=name,logo_path`,
       {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
+        headers: supabaseServerHeaders(),
         cache: 'no-store',
       },
     );
@@ -101,7 +99,7 @@ export async function GET(
   let eps: string | null = null;
   try {
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${SUPABASE_KEY}` },
+      headers: supabaseServerHeaders(),
       cache: 'no-store',
     });
     if (res.ok) {

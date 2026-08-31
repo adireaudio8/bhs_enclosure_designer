@@ -93,7 +93,7 @@ Do not change the theme navigation to this URL until the Vercel deployment is li
 Copy `.env.example` and set:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY` (server-only, independently revocable)
 - `SHOPIFY_SHOP_DOMAIN`
 - `SHOPIFY_ADMIN_ACCESS_TOKEN`
 - `SHOPIFY_API_SECRET`

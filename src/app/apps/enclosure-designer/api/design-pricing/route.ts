@@ -45,13 +45,14 @@ import {
   sanitizeCustomerEnclosureInputs,
 } from '@/lib/customer-enclosure-boundary';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
+import { SUPABASE_SERVER_KEY, supabaseServerHeaders } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 
 const LEAD_TIME_DAYS = 21;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+const SUPABASE_KEY = SUPABASE_SERVER_KEY;
 
 type PricingTier = 'guest' | 'customer' | 'dealer' | 'distributor';
 
@@ -131,10 +132,7 @@ async function lookupSupabasePriceRow(
   let rows: PricingRow[] = [];
   try {
     const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
+      headers: supabaseServerHeaders(),
       cache: 'no-store',
     });
     if (!res.ok) {
@@ -169,10 +167,7 @@ async function lookupPricingModifierConfig(): Promise<PricingModifiersConfig> {
 
   try {
     const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
+      headers: supabaseServerHeaders(),
       cache: 'no-store',
     });
     if (!res.ok) {
