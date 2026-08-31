@@ -2,7 +2,7 @@
 
 **Prepared:** 2026-08-24; current target refreshed 2026-08-31
 
-**Status:** Engine `1832cc7` parity packaged and locally validated; GitHub push, production deployment, and live verification pending
+**Status:** Engine `1832cc7` parity packaged, pushed, deployed, and live-verified on both consumers
 
 **Target engine:** `1832cc78eef94cdb558a4dae5668e2a735780b7e`
 
@@ -16,8 +16,10 @@ This is shared-engine parity, not identical UI parity. The customer designer sho
 
 - The calculator already pins engine `1832cc78eef94cdb558a4dae5668e2a735780b7e`.
 - The designer sync workflow packaged that exact clean commit, recorded its provenance and SHA-256, refreshed the same-path file dependency, and passed the built-in cross-app parity check.
-- TypeScript and the production Next.js build passed. The designer regression test suite must also pass before commit.
+- Designer tests, TypeScript, the production Next.js build, and the exact cross-app parity check passed. Engine CI run `33417535608`, calculator CI run `33417539586`, and designer CI run `33417541777` also passed.
 - This engine revision adds the canonical standard-carton formula with the original dimensional allowances plus 3.3 mm clearance on each opposing side. The website has no manufacturing carton UI, but engine parity remains mandatory.
+- Designer commit `5c7edea37d91458f32cf943470b852b91ff6f8b3` and calculator commit `86dd8a0f00cb2e801642bac0f90d3cb34459a05e` deployed as Vercel deployments `dpl_7fMh44RT7PRHP3Gx6jjkwhFyqkaw` and `dpl_6R61Q1BUYFCfMUsuwRrDTdZrKt2a`; both reached `READY`.
+- The direct designer route, live Shopify route `/apps/enclosure-designer`, and calculator route returned HTTP `200`. The live designer health endpoint reported exact engine `1832cc78eef94cdb558a4dae5668e2a735780b7e`.
 - The detailed `60c7242` rollout evidence below is retained as the previous verified production baseline; it is not the current repository target.
 
 ## Approved customer UI scope — 2026-08-24
