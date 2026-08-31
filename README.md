@@ -98,6 +98,10 @@ Copy `.env.example` and set:
 - `SHOPIFY_ADMIN_ACCESS_TOKEN`
 - `SHOPIFY_API_SECRET`
 
+Production credential status (2026-08-31): the designer uses the dedicated
+Supabase key named `customer_designer`. Both legacy JWT-based key types are
+disabled. Do not reuse the Calculator, Production API, or Nest Runner key.
+
 The app needs Shopify Admin API access to create draft orders. If customer tier pricing is used, the token also needs customer read access so logged-in customer tags can be checked.
 
 Vercel project setup:
