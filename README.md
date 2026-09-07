@@ -32,6 +32,12 @@ That avoids Vercel needing SSH/GitHub access to the private `enclosure-engine` r
 
 ## Mandatory engine parity
 
+**September 7 shipping policy:** the vendored engine now matches calculator
+revision `3edbdca9b003df2b687a5510035d9f75ab77da4e`. Packaged shipping/billable
+weights round up to whole pounds after packaging; raw enclosure mass and
+fractional-inch dimensions retain precision. This does not add flat-pack choices
+to the customer UI or change customer checkout/invoice scope.
+
 This app and `enclosure-calculator-web` are parallel consumers of `enclosure-engine`. Whenever either consumer adopts a new engine revision, both must be updated to the **same full engine commit** in the same release work. The engine change is not complete until both consumers pass their checks, are pushed and deployed, and the live Shopify route `/apps/enclosure-designer` is verified.
 
 The website UI intentionally exposes a customer-safe subset of the internal Design tab. It does not render internal calculations, cut lists, costs, or DXF/CNC downloads. That UI distinction is intentional; it does not permit the underlying shared engine to remain on an older revision.
