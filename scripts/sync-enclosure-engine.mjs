@@ -9,6 +9,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -77,6 +78,8 @@ const resolvedRevision = run('git', ['-C', engineRepo, 'rev-parse', `${revisionA
 if (resolvedRevision !== revisionArgument) fail('Requested SHA did not resolve to the exact engine commit.');
 
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'bhs-engine-sync-'));
+const checkedTemporaryRoot = realpathSync(temporaryRoot);
+if (dirname(checkedTemporaryRoot) !== realpathSync(tmpdir())) fail('Temporary worktree escaped the system temporary directory.');
 const cleanWorktree = join(temporaryRoot, 'engine');
 const packDirectory = join(temporaryRoot, 'pack');
 let worktreeAdded = false;
@@ -116,6 +119,8 @@ try {
 
   console.log(`[engine-sync] Website engine updated and verified at ${revisionArgument}.`);
 } finally {
+  if (realpathSync(temporaryRoot) !== checkedTemporaryRoot
+    || dirname(resolve(cleanWorktree)) !== resolve(temporaryRoot)) fail('Temporary cleanup path changed.');
   if (worktreeAdded) {
     spawnSync('git', ['-C', engineRepo, 'worktree', 'remove', '--force', cleanWorktree], {
       cwd: root,

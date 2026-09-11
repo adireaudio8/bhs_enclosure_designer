@@ -32,8 +32,8 @@ That avoids Vercel needing SSH/GitHub access to the private `enclosure-engine` r
 
 ## Mandatory engine parity
 
-**September 7 shipping policy:** the vendored engine now matches calculator
-revision `3edbdca9b003df2b687a5510035d9f75ab77da4e`. Packaged shipping/billable
+**September 11 series identity and shipping policy:** the vendored engine now matches calculator
+revision `27530b746580a6070aa3e0cf65736719c8fcf6ff`. Enclosure names now carry their series prefix throughout model generation and saved-design identity matching. Packaged shipping/billable
 weights round up to whole pounds after packaging; raw enclosure mass and
 fractional-inch dimensions retain precision. This does not add flat-pack choices
 to the customer UI or change customer checkout/invoice scope.
@@ -45,7 +45,7 @@ The website UI intentionally exposes a customer-safe subset of the internal Desi
 Current coordinated engine revision:
 
 ```text
-1832cc78eef94cdb558a4dae5668e2a735780b7e
+27530b746580a6070aa3e0cf65736719c8fcf6ff
 ```
 
 To refresh the vendored engine:
