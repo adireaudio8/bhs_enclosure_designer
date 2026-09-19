@@ -21,6 +21,7 @@ The app uses the existing designer and pinned enclosure engine. The BHS-only app
 ## Confirmed requirements
 
 - All dealers use Shopify.
+- The app is free for dealers to install and use; Andrew confirmed no app fee on September 19, 2026. Physical enclosure orders remain payable through Collective.
 - Customers purchase on the dealer's store, in its regular cart alongside subs, amps and other merchandise.
 - Custom enclosures must flow through Shopify Collective, including automatic dealer-to-BHS payments.
 - Andrew will identify the first pilot dealer. Do not assign or activate existing Collective retailers as part of app development.
@@ -71,6 +72,8 @@ The historic 20% shipping-included Collective plan is not hard-coded into this a
 ## Controlled pilot acceptance
 
 Use an agreed test transaction; no test orders have been placed during development.
+
+Collective is unavailable on development/client-transfer stores. Its real order/payment test needs an eligible retailer store on an active plan with Shopify Payments fully activated. The reviewer-development-store setup and any clearly labeled fixtures cannot establish Collective settlement. See the [two-environment test plan](dealer-app-submission.md#reviewer-demonstration).
 
 - Add a sub/amp first, then an enclosure. Confirm both remain in one cart and one dealer checkout.
 - Add two different enclosure designs at the same price. Confirm two distinct line properties and stored snapshots.

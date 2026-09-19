@@ -4,23 +4,17 @@ Reviewed September 19, 2026 after the preparation fixes. **Not submitted and not
 
 ## Summary
 
-✅ **Likely passing:** 32
+✅ **Likely passing:** 33
 
 ❌ **Likely failing:** 0
 
-⚠️ **Needs review:** 2
+⚠️ **Needs review:** 1
 
 ⏭️ **Groups skipped:** 9
 
 **Note:** This reviews Shopify’s selected locally checkable subset. These and additional requirements will still be reviewed by Shopify upon submission. Zero known failures in this subset does not mean submission readiness. The primary-workflow test store, privacy operations, protected order-data access and listing materials remain unfinished; see [submission preparation](dealer-app-submission.md).
 
 ## ⚠️ Requirements that need review
-
-⚠️ **1.2.1 Use Shopify App Pricing or the Shopify Billing API**
-
-**Why this needs attention:** Confirm the app itself is free for dealers, including outside-platform arrangements. Any app usage/setup/subscription charge that falls under Shopify billing requirements must use Shopify billing; no evidence of prohibited actual charging was found.
-
-**What was detected:** No appSubscriptionCreate/appPurchaseOneTimeCreate, Managed Pricing configuration or external app billing implementation exists in dealer code. Collective payments described in src/app/dealer/page.tsx are supplier merchandise settlement, not app subscription charges.
 
 ⚠️ **2.2.3 Use the latest version of Shopify App Bridge**
 
@@ -45,6 +39,8 @@ These groups were not evaluated because their applicability signal was absent or
 - **5.8 Post purchase** — Conditional signal absent: no checkout_post_purchase extension.
 - **5.9 Mobile app builders** — Opt-in not requested.
 - **5.10 Donation** — Opt-in not requested.
+
+Andrew confirmed the app is free on September 19, 2026, resolving the app-billing question. Physical enclosure orders remain payable through Collective. Shopify documentation also confirms Collective cannot run on development stores; the corrected test plan requires an eligible live/staging retailer for the actual order/payment integration.
 
 ## Validation and coverage
 

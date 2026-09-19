@@ -3,9 +3,9 @@
   "source": "https://shopify.dev/docs/apps/launch/app-store-review/app-store-ai-self-review-requirements",
   "scope": "Local-code subset, supplemented by live TLS and unauthenticated-route checks; not Shopify approval",
   "counts": {
-    "likely_passing": 32,
+    "likely_passing": 33,
     "likely_failing": 0,
-    "needs_review": 2,
+    "needs_review": 1,
     "groups_skipped": 9
   },
   "requirements": [
@@ -131,12 +131,12 @@
     {
       "id": "1.2.1",
       "name": "Use Shopify App Pricing or the Shopify Billing API",
-      "status": "needs_review",
+      "status": "likely_passing",
       "evidence": [
         "No appSubscriptionCreate/appPurchaseOneTimeCreate, Managed Pricing configuration or external app billing implementation exists in dealer code.",
-        "Collective payments described in src/app/dealer/page.tsx are supplier merchandise settlement, not app subscription charges."
-      ],
-      "action": "Confirm the app itself is free for dealers, including outside-platform arrangements. Any app usage/setup/subscription charge that falls under Shopify billing requirements must use Shopify billing; no evidence of prohibited actual charging was found."
+        "Collective payments described in src/app/dealer/page.tsx are supplier merchandise settlement, not app subscription charges.",
+        "Andrew explicitly confirmed on September 19, 2026: This is a free app - no need to pay. No app fees or billing implementation; physical enclosure orders are separate Collective purchases."
+      ]
     },
     {
       "id": "1.2.2",

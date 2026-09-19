@@ -6,7 +6,7 @@ Prepared September 19, 2026. **Not submitted to Shopify.** Resolve the unfinishe
 
 Submit a functional first release, then install it with one approved dealer before broader rollout. Hosted code updates go to the separate dealer Vercel project. Theme-extension/configuration changes are released as new Shopify app versions; installed stores receive those versions. Some extension types or new protected access require additional Shopify review. Preserve the BHS-only application and keep ordering behind per-store activation checks.
 
-Approval does not prove Collective supplier orders and settlement. If the first live Collective pilot happens after approval, provide Shopify a working development-store demonstration and accurate test instructions before submission. Do not describe untested payment or supplier-order linkage as verified.
+Approval does not prove Collective supplier orders and settlement. Shopify explicitly states that Collective is unavailable on development, partner and client-transfer stores. A development store alone cannot prove this app's core supplier-order/payment integration. Use an eligible retailer store with an active Shopify plan and fully activated Shopify Payments for the real Collective pilot; agree the review setup with Shopify if the reviewer cannot access that flow. Do not describe simulations or untested supplier-order linkage as verified.
 
 ## Draft listing copy
 
@@ -26,19 +26,27 @@ Approval does not prove Collective supplier orders and settlement. If the first 
 
 **Availability:** Recommend limited listing visibility and BHS-controlled activation. Limited visibility does not make the installation link private.
 
-**Pricing:** Pending Andrew's confirmation. No app usage, setup or subscription billing is implemented. Enclosure purchases through Collective are separate from app fees; do not publish a free-app claim until confirmed.
+**Pricing: Free.** Andrew explicitly confirmed on September 19, 2026 that dealers do not pay to use this app. No app usage, setup or subscription billing is required. Dealers still pay for the physical enclosure orders through Collective under their agreed supplier terms. This is a listing preparation update; the live Shopify listing has not been submitted or changed.
 
 **Required assets and contacts:** A 1200 × 1200 PNG/JPEG app icon; screenshots from finished merchant/customer flows; support, API, review and emergency contacts; a public app-specific privacy policy. Do not fabricate these or substitute a storefront policy without checking coverage.
 
 ## Reviewer demonstration
 
-Prepare an accessible development store with a working primary workflow. Describe which services are real versus simulated. Keep test data separate from production activation; do not bypass production Collective checks to present an incomplete integration as complete.
+Use two test environments:
+
+1. **Development store:** Install/open/uninstall/reinstall the app, add its theme block, and check merchant authentication and onboarding. A separate, clearly labeled test setup using ordinary test products can exercise the designer, native mixed cart, test checkout and saved-design UI. That test setup is not yet implemented. Its fixtures must remain isolated from production; it must never claim Collective eligibility or automatic settlement.
+2. **Eligible retailer store:** Verify a small real catalog shared from BHS through Collective, exact retail and supplier pricing, shipping, design-reference transfer, supplier-order creation, automatic payment eligibility/settlement, and cancellation/refund behavior. Use a separately registered single-store custom pilot app with the same source if testing before public-app approval. Do not change the shared app's distribution to custom, since Shopify distribution selection is permanent.
+
+The real retailer can be the first willing dealer or another existing eligible store Andrew owns. A new paid store is an alternative only after explicit authorization of its cost and payment setup; none has been created or purchased. Andrew was asked which existing-store/pilot route to use. Until selected, the real Collective test is pending.
+
+The public-app reviewer must have a usable path through the features claimed in the listing. Supply an English screencast, accurate test instructions and appropriate reviewer access. Explain the Collective restriction explicitly and confirm any special review arrangement with Shopify before relying on a simulated development-store flow for approval. A staging store alone does not make an unreleased public app installable on a live store.
 
 Record an English screencast showing Shopify installation, theme setup using the **BHS Custom Enclosures** block, design/pricing validation, a mixed cart, distinct design references, merchant access to saved selections and notes, the order/supplier handoff the app claims to support, and uninstall/reinstall.
 
 ## Remaining submission gates
 
 - Complete an actual development-store installation and primary-workflow demonstration. Unit tests and an OAuth redirect check alone do not establish this.
+- Complete the real Collective pilot on an eligible live/staging retailer, or obtain an explicit review/testing arrangement from Shopify. Collective cannot be installed on ordinary development stores.
 - Prepare a verified first-release Collective catalog. The read-only manifest has 4,818 candidate prices in 49 groups; none has been approved or published as part of this task.
 - Establish authoritative matching of retailer orders/design references to BHS Collective supplier orders. The current inbox requires staff reconciliation; no automatic manufacturing handoff is implemented.
 - Complete privacy request fulfillment and retention operations. Authenticated, durable webhook queues do not by themselves fulfill export/deletion requests.
@@ -59,3 +67,5 @@ Validation: 71 tests pass, including seven merchant access/projection tests. Eng
 - [Review process](https://shopify.dev/docs/apps/launch/app-store-review/review-process)
 - [Deploy and release app versions](https://shopify.dev/docs/apps/launch/deployment/deploy-app-versions)
 - [App listing visibility](https://shopify.dev/docs/apps/launch/distribution/visibility)
+- [Collective installation and development-store restriction](https://help.shopify.com/en/manual/online-sales-channels/shopify-collective/retailers/installation)
+- [Development-store creation and limitations](https://shopify.dev/docs/apps/build/stores/development-stores)
