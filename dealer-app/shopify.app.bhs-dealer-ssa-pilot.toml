@@ -1,0 +1,21 @@
+# SSA pilot registration only. Hosting and custom distribution are not configured.
+# Do not deploy this default scaffold or use it as an installation-ready app.
+
+client_id = "800856ca5643603ede0a8834c3de780f"
+application_url = "https://shopify.dev/apps/default-app-home"
+embedded = true
+name = "BHS Dealer SSA Pilot"
+
+[webhooks]
+api_version = "2026-10"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_inventory,read_locations,read_orders,read_products,read_publications,write_app_proxy"
+
+[auth]
+redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true

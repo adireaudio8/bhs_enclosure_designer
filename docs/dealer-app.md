@@ -6,7 +6,7 @@ The initial app implementation is hosted for setup and review. The database is c
 
 Submission materials and remaining gates are tracked in [dealer-app-submission.md](dealer-app-submission.md). The app has **not been submitted**. Preflight improvements remove manual shop-domain entry, add detailed theme onboarding and protected merchant access to saved designs, and remove unverified dealer shipping-time promises. See the [pre-submission review](dealer-app-review.md).
 
-Registered Shopify app: **BHS Dealer Enclosure Designer**, client ID `0683dc0526169d9bd139c17b54f2a20d`, in the Basshead Supply organization. Its configuration and theme extension validate. Separate hosting project: `bhs-dealer-enclosure-designer`, at https://bhs-dealer-enclosure-designer.vercel.app/dealer. The SQL migration is applied to the pricing database. No dealer has been selected for the pilot.
+Registered Shopify app: **BHS Dealer Enclosure Designer**, client ID `0683dc0526169d9bd139c17b54f2a20d`, in the Basshead Supply organization. Its configuration and theme extension validate. Separate hosting project: `bhs-dealer-enclosure-designer`, at https://bhs-dealer-enclosure-designer.vercel.app/dealer. The SQL migration is applied to the pricing database. Andrew selected **Sound Solutions Audio** for the pilot and confirmed its existing Collective membership. Its storefront identifies the canonical store as `soundsolutionsaudio.myshopify.com`. See [SSA pilot setup](dealer-app-ssa-pilot.md) for registration status and remaining steps.
 
 Shopify version `dealer-foundation-20260919` is uploaded **without release**: https://dev.shopify.com/dashboard/221105492/apps/425553231873/versions/1135543746561. The isolated hosting deployment `dpl_276FnNjyDV5mTMFMThvzKqtYiYN2` is READY and live HTML directs merchants to Shopify admin for installation/opening. Vercel labels the new project's default deployment production; this is separate from the existing BHS storefront. No dealer is installed or activated. Live unauthenticated session, proxy, catalog and webhook requests return 401.
 
@@ -24,7 +24,7 @@ The app uses the existing designer and pinned enclosure engine. The BHS-only app
 - The app is free for dealers to install and use; Andrew confirmed no app fee on September 19, 2026. Physical enclosure orders remain payable through Collective.
 - Customers purchase on the dealer's store, in its regular cart alongside subs, amps and other merchandise.
 - Custom enclosures must flow through Shopify Collective, including automatic dealer-to-BHS payments.
-- Andrew will identify the first pilot dealer. Do not assign or activate existing Collective retailers as part of app development.
+- Sound Solutions Audio is the first pilot dealer, selected by Andrew on September 19, 2026. Existing Collective membership is Andrew-confirmed; automatic-payment settings and custom-enclosure terms still require live verification. Keep ordering disabled until the controlled pilot is ready.
 - Boxify work remains on hold until Andrew finishes the source weights and dimensions.
 
 ## Collective design
