@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function DealerHome({ searchParams }: { searchParams: Promise<{ shop?: string }> }) {
   const params = await searchParams;
   const configured = Boolean(SUPABASE_SERVER_KEY && process.env.DEALER_SHOPIFY_API_KEY);
+  const pilot = Boolean(process.env.DEALER_ALLOWED_SHOPS?.trim());
   if (params.shop && configured) redirect(`/dealer/install?shop=${encodeURIComponent(params.shop)}`);
   const token = (await cookies()).get('bhs_dealer_merchant')?.value;
   let shop;
@@ -25,7 +26,7 @@ export default async function DealerHome({ searchParams }: { searchParams: Promi
       <p><a href="/dealer/designs">View saved customer designs and notes</a></p>
       <h2 style={{ marginTop: 24 }}>Add the designer to your website</h2>
       <ol style={{ lineHeight: 1.8 }}>
-        <li>In Shopify, open Online Store → Themes and choose Edit theme for your current theme.</li>
+        <li>In Shopify, open Online Store → Themes, duplicate your current theme, and choose Edit theme for the unpublished copy.</li>
         <li>Use the template selector to create a page template for custom enclosures.</li>
         <li>Choose Add section → Apps → BHS Custom Enclosures.</li>
         <li>Save the template, then assign it to your custom-enclosure page under Online Store → Pages.</li>
@@ -37,8 +38,8 @@ export default async function DealerHome({ searchParams }: { searchParams: Promi
       <p>BHS is preparing custom enclosure ordering for dealer stores. Store connections will be available after setup and testing are complete.</p>
       <p>Customers will design their enclosure, add it to the dealer’s regular cart, and check out with their other products. Orders will be fulfilled through Shopify Collective.</p>
     </> : <>
-      <p>Open BHS Dealer Enclosure Designer from Apps in your Shopify admin.</p>
-      <p>New installations will be available through our Shopify App Store listing after review. Contact BHS for onboarding and Collective setup.</p>
+      <p>Open {pilot ? 'BHS Dealer SSA Pilot' : 'BHS Dealer Enclosure Designer'} from Apps in your Shopify admin.</p>
+      <p>{pilot ? 'This private pilot is available to Sound Solutions Audio through the installation link provided by BHS. Ordering stays disabled until Collective setup and testing are complete.' : 'New installations will be available through our Shopify App Store listing after review. Contact BHS for onboarding and Collective setup.'}</p>
       <p><a href="https://admin.shopify.com/">Open Shopify admin</a></p>
     </>}
   </main>;

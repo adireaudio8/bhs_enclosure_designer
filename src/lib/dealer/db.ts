@@ -1,5 +1,5 @@
 import { supabaseServerHeaders } from '../supabase-server';
-import { DealerError, requiredEnv } from './security';
+import { DealerError, canonicalShop, requiredEnv } from './security';
 import type { DealerShop, DealerQuote } from './types';
 
 export async function db<T>(path: string, method = 'GET', body?: unknown, prefer = 'return=representation'): Promise<T> {
@@ -12,6 +12,7 @@ export async function db<T>(path: string, method = 'GET', body?: unknown, prefer
 }
 
 export async function getShop(shop: string): Promise<DealerShop> {
+  shop = canonicalShop(shop);
   const rows = await db<DealerShop[]>(`bhs_dealer_shops?shop=eq.${encodeURIComponent(shop)}&limit=1`);
   if (!rows[0] || rows[0].status === 'uninstalled') throw new DealerError('This store has not connected the dealer app.', 403);
   return rows[0];

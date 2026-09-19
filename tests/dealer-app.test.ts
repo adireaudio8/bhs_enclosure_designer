@@ -17,6 +17,7 @@ const variant: LiveVariant = { id: 'variant', legacyResourceId: '1234', sku: opt
 const inputs = { ...DEFAULT_INPUTS, boxDepth: 18, boxHeight: 16, portWidth: 1.75, tuningFrequency: 32, netAirSpace: 2, subDisplacement: 0.15, subCutoutDiameter: 11.19, outsideDiameter: 12.81 };
 
 beforeEach(() => {
+  vi.stubEnv('DEALER_ALLOWED_SHOPS', '');
   vi.stubEnv('DEALER_SHOPIFY_API_SECRET', 'shopify-secret');
   vi.stubEnv('DEALER_SESSION_SECRET', 'a-long-random-test-secret-of-at-least-32-chars');
   vi.stubEnv('DEALER_ENCRYPTION_KEY', randomBytes(32).toString('base64'));
@@ -26,6 +27,24 @@ afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 describe('dealer authorization', () => {
   it.each(['https://dealer.myshopify.com', 'dealer.myshopify.com.evil.example', 'dealer.myshopify.com@evil.example', 'localhost', 'dealer/myshopify.com'])('rejects a non-Shopify tenant %s', value => expect(() => canonicalShop(value)).toThrow());
   it('normalizes a legitimate tenant', () => expect(canonicalShop('DEALER.myshopify.com')).toBe(shop.shop));
+  it('limits pilot access to exact configured store domains', () => {
+    vi.stubEnv('DEALER_ALLOWED_SHOPS', ' SOUNDSOLUTIONSAUDIO.myshopify.com ');
+    expect(canonicalShop('soundsolutionsaudio.myshopify.com')).toBe('soundsolutionsaudio.myshopify.com');
+    expect(() => canonicalShop('dealer.myshopify.com')).toThrow(/not available/);
+    expect(() => canonicalShop('soundsolutionsaudio-other.myshopify.com')).toThrow(/not available/);
+  });
+  it('rejects a previously signed session after its store is removed from pilot access', () => {
+    const token = signSession('merchant', shop.shop, 60);
+    vi.stubEnv('DEALER_ALLOWED_SHOPS', 'soundsolutionsaudio.myshopify.com');
+    expect(() => readSession(token, 'merchant')).toThrow(/not available/);
+  });
+  it('rejects a correctly signed proxy request for a store outside the pilot', () => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const url = new URL(`https://app.example/dealer/proxy?shop=${shop.shop}&timestamp=${timestamp}`);
+    url.searchParams.set('signature', hmac(`shop=${shop.shop}timestamp=${timestamp}`, 'shopify-secret'));
+    vi.stubEnv('DEALER_ALLOWED_SHOPS', 'soundsolutionsaudio.myshopify.com');
+    expect(() => verifyShopifyQuery(url, true)).toThrow(/not available/);
+  });
   it('binds encrypted credentials to their shop and token type', () => {
     const cipher = encrypt('secret-token', `${shop.shop}:access`);
     expect(decrypt(cipher, `${shop.shop}:access`)).toBe('secret-token');

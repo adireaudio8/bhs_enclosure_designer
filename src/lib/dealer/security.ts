@@ -14,7 +14,12 @@ export function canonicalShop(value: unknown): string {
   if (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(value)) {
     throw new DealerError('Open the app from your Shopify admin. The store address could not be verified.');
   }
-  return value.toLowerCase();
+  const shop = value.toLowerCase();
+  const allowed = process.env.DEALER_ALLOWED_SHOPS?.trim();
+  if (allowed && !allowed.split(',').map(entry => entry.trim().toLowerCase()).includes(shop)) {
+    throw new DealerError('This pilot installation is not available for this store. Contact BHS for access.', 403);
+  }
+  return shop;
 }
 
 export function equal(a: string, b: string): boolean {
