@@ -1,0 +1,28 @@
+# Partner-owned SSA pilot. Organization 236496624; custom distribution only.
+# Uses the isolated dealer hosting; customer ordering remains disabled until pilot verification.
+client_id = "e819030eaa28f090db1c2a659c5b9f62"
+name = "BHS Dealer SSA Pilot"
+application_url = "https://bhs-dealer-enclosure-designer.vercel.app/dealer"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,read_inventory,read_locations,read_publications,read_orders,write_app_proxy"
+
+[auth]
+redirect_urls = ["https://bhs-dealer-enclosure-designer.vercel.app/dealer/callback"]
+
+[webhooks]
+api_version = "2026-04"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled", "orders/paid", "orders/updated", "orders/cancelled", "refunds/create"]
+uri = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/webhooks"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/webhooks"
+
+[app_proxy]
+url = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/proxy"
+subpath = "bhs-custom-enclosures"
+prefix = "apps"
