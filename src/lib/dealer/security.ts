@@ -12,7 +12,7 @@ export function requiredEnv(name: string): string {
 
 export function canonicalShop(value: unknown): string {
   if (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(value)) {
-    throw new DealerError('Enter the store’s myshopify.com address.');
+    throw new DealerError('Open the app from your Shopify admin. The store address could not be verified.');
   }
   return value.toLowerCase();
 }

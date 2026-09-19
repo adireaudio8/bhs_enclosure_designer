@@ -817,7 +817,7 @@ export default function CustomEnclosureDesigner({ transport }: { transport?: Des
               Design Your Custom Enclosure
             </h1>
             <p className="text-xs sm:text-sm text-neutral-400">
-              Baltic birch and MDF · Made in California · ships in <strong className="text-white">2–3 weeks</strong>
+              {transport ? 'Baltic birch and MDF · Made in California · Contact your dealer for current build timing' : <>Baltic birch and MDF · Made in California · ships in <strong className="text-white">2–3 weeks</strong></>}
             </p>
           </div>
         </div>
@@ -1513,7 +1513,7 @@ export default function CustomEnclosureDesigner({ transport }: { transport?: Des
               </div>
               <p className="text-[11px] text-text-muted mt-0.5 mb-2">
                 {pricing.status === 'ok'
-                  ? `ships in ${pricing.leadTimeDays} days`
+                  ? (transport ? 'Contact this store for current build and shipping timing' : `ships in ${pricing.leadTimeDays} days`)
                   : pricing.status === 'unavailable'
                   ? 'see message below'
                   : pricing.status === 'error'

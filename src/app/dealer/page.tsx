@@ -22,15 +22,24 @@ export default async function DealerHome({ searchParams }: { searchParams: Promi
         <li>Shipping arrangement: {shop.shipping_confirmed ? 'Confirmed' : 'Awaiting verification'}</li>
         <li>Cart and order flow: {shop.pilot_verified ? 'Confirmed' : 'Awaiting pilot test'}</li>
       </ul>
-      <p>Add the “BHS Custom Enclosure Designer” app block to a page in your theme editor once BHS has enabled your store.</p>
+      <p><a href="/dealer/designs">View saved customer designs and notes</a></p>
+      <h2 style={{ marginTop: 24 }}>Add the designer to your website</h2>
+      <ol style={{ lineHeight: 1.8 }}>
+        <li>In Shopify, open Online Store → Themes and choose Edit theme for your current theme.</li>
+        <li>Use the template selector to create a page template for custom enclosures.</li>
+        <li>Choose Add section → Apps → BHS Custom Enclosures.</li>
+        <li>Save the template, then assign it to your custom-enclosure page under Online Store → Pages.</li>
+        <li>Preview the page with BHS after your Collective products, shipping and automatic payments are configured. Add the page to your store navigation once the order test passes.</li>
+      </ol>
       <p>Customers add their enclosure to your regular cart and pay your store. Collective manages the supplier order and payment to BHS.</p>
     </> : !configured ? <>
       <p style={{ marginTop: 20 }}>Setup in progress</p>
       <p>BHS is preparing custom enclosure ordering for dealer stores. Store connections will be available after setup and testing are complete.</p>
       <p>Customers will design their enclosure, add it to the dealer’s regular cart, and check out with their other products. Orders will be fulfilled through Shopify Collective.</p>
     </> : <>
-      <p>Connect your Shopify store to set up custom enclosures.</p>
-      <form action="/dealer/install"><label>Store address <input name="shop" placeholder="your-store.myshopify.com" required style={{ border: '1px solid #888', padding: 8 }} /></label> <button type="submit">Connect store</button></form>
+      <p>Open BHS Dealer Enclosure Designer from Apps in your Shopify admin.</p>
+      <p>New installations will be available through our Shopify App Store listing after review. Contact BHS for onboarding and Collective setup.</p>
+      <p><a href="https://admin.shopify.com/">Open Shopify admin</a></p>
     </>}
   </main>;
 }

@@ -1,0 +1,498 @@
+{
+  "reviewedAt": "2026-09-19",
+  "source": "https://shopify.dev/docs/apps/launch/app-store-review/app-store-ai-self-review-requirements",
+  "scope": "Local-code subset, supplemented by live TLS and unauthenticated-route checks; not Shopify approval",
+  "counts": {
+    "likely_passing": 32,
+    "likely_failing": 0,
+    "needs_review": 2,
+    "groups_skipped": 9
+  },
+  "requirements": [
+    {
+      "id": "1.1.1",
+      "name": "Use session tokens for authentication",
+      "status": "likely_passing",
+      "evidence": [
+        "dealer-app/shopify.app.bhs-dealer-enclosure-designer.toml:6 sets embedded=false.",
+        "src/app/dealer/callback/route.ts establishes a first-party secure HttpOnly merchant cookie for this standalone app; src/components/DealerDesigner.tsx uses a signed bearer token, not third-party-cookie authentication."
+      ],
+      "scope_note": "The description expressly concerns embedded apps. Do not fail this standalone app merely for not implementing embedded App Bridge session tokens."
+    },
+    {
+      "id": "1.1.2",
+      "name": "Use Shopify checkout",
+      "status": "likely_passing",
+      "evidence": [
+        "src/lib/dealer/proxy-wrapper.ts adds to the merchant-origin cart/add.js and navigates to the merchant cart.",
+        "src/components/CustomEnclosureDesigner.tsx:769 returns after transport.addToCart before the separate BHS-only checkout URL branch.",
+        "src/lib/dealer/design.ts:createCartQuote returns a native variant cart item; it does not create an off-platform order or take payment."
+      ]
+    },
+    {
+      "id": "1.1.3",
+      "name": "Direct merchants to the Shopify Theme Store",
+      "status": "likely_passing",
+      "evidence": [
+        "dealer-app/extensions/dealer-designer/blocks/designer.liquid is a theme app block, not a downloadable theme.",
+        "No Themes API create/upload calls or write_themes scope exist in dealer routes, libraries or configuration."
+      ]
+    },
+    {
+      "id": "1.1.4",
+      "name": "Use only factual information",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/api/[...path]/route.ts:48 no longer returns a fixed shipping lead time.",
+        "src/components/CustomEnclosureDesigner.tsx:820 and :1516 use dealer-specific wording directing shoppers to their dealer for current build/shipping timing; fixed BHS-only timing is behind the non-dealer transport branch.",
+        "No fabricated sales, reviews or traffic notifications were found; prices derive from shared pricing records and calculated inputs."
+      ],
+      "scope_note": "Local dealer behavior is likely passing after the shipping copy change. App Store listing copy still requires review when prepared."
+    },
+    {
+      "id": "1.1.6",
+      "name": "Build single-merchant storefronts. Marketplaces should be sales channels",
+      "status": "likely_passing",
+      "evidence": [
+        "src/lib/dealer/types.ts separates independent dealer shops; src/lib/dealer/proxy-wrapper.ts uses each dealer's native cart.",
+        "src/lib/dealer/collective.ts verifies one BHS-supplied Collective variant; there is no marketplace seller registration or split-payment system."
+      ]
+    },
+    {
+      "id": "1.1.7",
+      "name": "Always build Payment Gateway apps using the Payments API and after obtaining authorization",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer scopes contain no gateway/payment scopes; no payment provider keys or gateway integration exist in dealer code.",
+        "src/lib/dealer/orders.ts reads Shopify financial status only. Customer payment stays in Shopify checkout and supplier settlement stays in Collective."
+      ]
+    },
+    {
+      "id": "1.1.8",
+      "name": "Build apps for Shopify POS only, not third-party systems",
+      "status": "likely_passing",
+      "evidence": [
+        "No Square, Clover, Lightspeed, third-party POS clients, POS synchronization or POS extension is present in dealer-app/, src/app/dealer or src/lib/dealer."
+      ]
+    },
+    {
+      "id": "1.1.9",
+      "name": "Obtain explicit buyer consent before adding charges",
+      "status": "likely_passing",
+      "evidence": [
+        "src/components/CustomEnclosureDesigner.tsx:1505 displays the price and :1566 binds handleAddToCart to an explicit button; :1580 labels dealer action 'Add custom enclosure to cart'.",
+        "src/lib/dealer/design.ts:103 returns exactly one chosen variant; no automatic surcharge, additional fee or extra cart line is created."
+      ]
+    },
+    {
+      "id": "1.1.10",
+      "name": "Maintain the cheapest shipping option as default",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer app has no checkout shipping-option customization or delivery-function extension; native Shopify checkout controls selection.",
+        "The shipping_confirmed flag in src/lib/dealer/db.ts only gates eligibility and does not modify rates/order."
+      ]
+    },
+    {
+      "id": "1.1.13",
+      "name": "Duplicate only authorized product information",
+      "status": "likely_passing",
+      "evidence": [
+        "src/lib/dealer/collective.ts requires registered BHS Collective-imported variant/SKU/location mapping.",
+        "src/lib/dealer/catalog-plan.ts is read-only planning; no arbitrary product-copy/scraping/importer UI exists."
+      ]
+    },
+    {
+      "id": "1.1.14",
+      "name": "Don't connect merchants to external agencies and developers",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/page.tsx only describes BHS setup and Collective ordering; no agency/freelancer service marketplace or referrals found in dealer routes/components."
+      ]
+    },
+    {
+      "id": "1.1.15",
+      "name": "Process refunds only through the original payment processor",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/webhooks/route.ts receives refunds/create but only calls reconcileDealerOrder.",
+        "src/lib/dealer/orders.ts records refunded/review status; there are no refund mutations, wallet payouts, gift-card refunds or store-credit operations."
+      ],
+      "scope_note": "If refund initiation is added, use the original processor, or supported Shopify store-credit handling through refundCreate/returnProcess; current app does not initiate refunds."
+    },
+    {
+      "id": "1.1.16",
+      "name": "Don't provide capital lending",
+      "status": "likely_passing",
+      "evidence": [
+        "No merchant lending, loans, cash advances or financing features were found in dealer code, app configuration or UI."
+      ]
+    },
+    {
+      "id": "1.2.1",
+      "name": "Use Shopify App Pricing or the Shopify Billing API",
+      "status": "needs_review",
+      "evidence": [
+        "No appSubscriptionCreate/appPurchaseOneTimeCreate, Managed Pricing configuration or external app billing implementation exists in dealer code.",
+        "Collective payments described in src/app/dealer/page.tsx are supplier merchandise settlement, not app subscription charges."
+      ],
+      "action": "Confirm the app itself is free for dealers, including outside-platform arrangements. Any app usage/setup/subscription charge that falls under Shopify billing requirements must use Shopify billing; no evidence of prohibited actual charging was found."
+    },
+    {
+      "id": "1.2.2",
+      "name": "Implement Shopify App Pricing or the Shopify Billing API correctly",
+      "status": "likely_passing",
+      "evidence": [
+        "No app charges or plan selection are implemented. The description applies if the app has charges; accept/decline/reinstall billing flow is currently inapplicable."
+      ],
+      "scope_note": "Reevaluate if monetization is introduced or the merchant confirms any app charges under 1.2.1."
+    },
+    {
+      "id": "1.2.3",
+      "name": "Allow pricing plan changes",
+      "status": "likely_passing",
+      "evidence": [
+        "No multiple app pricing plans or app subscriptions are implemented in dealer-app/, src/app/dealer or src/lib/dealer. Product MAP pricing is separate from app plans."
+      ],
+      "scope_note": "Reevaluate if app pricing plans are introduced."
+    },
+    {
+      "id": "2.2.1",
+      "name": "Use Shopify APIs",
+      "status": "likely_passing",
+      "evidence": [
+        "src/lib/dealer/shopify.ts implements OAuth exchange, expiring offline token refresh and Admin GraphQL.",
+        "src/lib/dealer/collective.ts queries actual dealer variants; src/lib/dealer/orders.ts queries actual orders."
+      ]
+    },
+    {
+      "id": "2.2.3",
+      "name": "Use the latest version of Shopify App Bridge",
+      "status": "needs_review",
+      "evidence": [
+        "dealer-app/shopify.app.bhs-dealer-enclosure-designer.toml:6 explicitly sets embedded=false.",
+        "package.json and src/app/layout.tsx include neither legacy App Bridge nor the current CDN app-bridge.js script."
+      ],
+      "action": "Confirm Shopify review applicability to this intentionally standalone admin app. The canonical excerpt says 'all apps', while the adjacent authentication rule explicitly describes embedded apps; do not fail it by assuming an embedded architecture. If embedding is required/selected, implement current App Bridge and compatible auth together."
+    },
+    {
+      "id": "2.2.4",
+      "name": "Use the GraphQL Admin API",
+      "status": "likely_passing",
+      "evidence": [
+        "src/lib/dealer/shopify.ts:adminGraphQL exclusively targets /admin/api/2026-04/graphql.json.",
+        "Dealer identity, variant and order operations are GraphQL; /admin/oauth/access_token is OAuth, native cart/*.js is storefront Ajax, and Supabase /rest/v1 is not Shopify REST Admin."
+      ],
+      "scope_note": "The separate BHS-only checkout implementation was not treated as the dealer checkout path."
+    },
+    {
+      "id": "2.2.6",
+      "name": "Don't display promotions or advertisements in admin extensions",
+      "status": "likely_passing",
+      "evidence": [
+        "dealer-app/extensions has one type=theme extension only. No admin block/action/link extensions or promotional admin extension code exists."
+      ]
+    },
+    {
+      "id": "2.2.7",
+      "name": "Only launch Max modal with merchant interaction",
+      "status": "likely_passing",
+      "evidence": [
+        "No App Bridge Max modal/fullscreen/ResourcePicker invocation appears in dealer routes or components. The 3D storefront viewer is not an admin Max modal."
+      ]
+    },
+    {
+      "id": "2.3.1",
+      "name": "Initiate installation from a Shopify-owned surface",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/page.tsx:40-42 directs unauthenticated merchants to Apps in Shopify admin and links to https://admin.shopify.com/; the store-address form is removed.",
+        "src/app/dealer/page.tsx:11 receives the shop URL parameter to begin OAuth; src/lib/dealer/security.ts:canonicalShop validates its format and now directs invalid requests back to Shopify admin instead of requesting manual URL entry.",
+        "No manual shop-domain entry fields remain in the dealer installation/configuration UI."
+      ],
+      "scope_note": "Shopify-owned listing installation and actual install/reinstall still need end-to-end verification; removing the prohibited manual-entry UI resolves the identified source violation."
+    },
+    {
+      "id": "2.3.2",
+      "name": "Authenticate immediately after install",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/page.tsx:11 forwards Shopify's shop parameter directly to /dealer/install.",
+        "src/app/dealer/install/route.ts performs persistence preflight then redirects to the shop's /admin/oauth/authorize using DEALER_SHOPIFY_API_KEY and DEALER_SCOPES; no app workflow is enabled first.",
+        "Protected dealer operations require validated sessions and an active store in src/lib/dealer/request.ts."
+      ],
+      "scope_note": "Manual URL-entry UI is removed. Test the actual Shopify-owned entry and OAuth flow end-to-end before submission."
+    },
+    {
+      "id": "2.3.3",
+      "name": "Redirect to the app UI after installation",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/callback/route.ts verifies HMAC/state, exchanges token, persists encrypted shop access and redirects to ${appOrigin()}/dealer with a merchant session cookie.",
+        "src/app/dealer/page.tsx displays connected store/setup state for authenticated merchants, appropriate to embedded=false."
+      ]
+    },
+    {
+      "id": "2.3.4",
+      "name": "Require OAuth authentication immediately after reinstall",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/install/route.ts always runs OAuth; there is no installed-once bypass.",
+        "src/app/dealer/callback/route.ts PATCHes existing stores with fresh token fields and resets uninstalled shops to pending; it does not fail on duplicate shop.",
+        "src/app/dealer/webhooks/route.ts removes stored tokens on uninstall."
+      ]
+    },
+    {
+      "id": "3.1.1",
+      "name": "Use a valid TLS/SSL certificate",
+      "status": "likely_passing",
+      "evidence": [
+        "All app, callback, webhook and proxy URLs in dealer app TOML use HTTPS on the Vercel hostname.",
+        "src/lib/dealer/security.ts:appOrigin rejects non-HTTPS URLs in production; merchant OAuth/session cookies are Secure.",
+        "Actual deployed certificate validity and redirect behavior are not demonstrable from source alone.",
+        "Live HTTPS fetch with normal certificate verification returned 200 on September 19, 2026 from deployment dpl_276FnNjyDV5mTMFMThvzKqtYiYN2. Private design routes return uncached redirects without a merchant session."
+      ]
+    },
+    {
+      "id": "3.2.1",
+      "name": "Request read_all_orders access scope only if it provides necessary app functionality",
+      "status": "likely_passing",
+      "evidence": [
+        "Neither dealer TOML nor DEALER_SCOPES in src/lib/dealer/shopify.ts requests read_all_orders.",
+        "src/lib/dealer/orders.ts fetches specific current orders from authenticated event references, with no historical reporting range."
+      ]
+    },
+    {
+      "id": "3.2.2",
+      "name": "Request write_payment_mandate scope only if it provides necessary app functionality",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer TOML and DEALER_SCOPES omit write_payment_mandate; no deferred-payment/selling-plan flow exists."
+      ]
+    },
+    {
+      "id": "3.2.3",
+      "name": "Request write_checkout_extensions_apis scope only if it provides necessary app functionality",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer TOML and DEALER_SCOPES omit write_checkout_extensions_apis; the sole extension is type=theme, with no post-purchase/checkout target."
+      ]
+    },
+    {
+      "id": "3.2.4",
+      "name": "Request read_advanced_dom_pixel_events scope only if it provides necessary app functionality",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer TOML and DEALER_SCOPES omit read_advanced_dom_pixel_events; no checkout pixel/heatmap/session replay implementation exists."
+      ]
+    },
+    {
+      "id": "3.2.5",
+      "name": "Request read_checkout_extensions_chat scope only when required",
+      "status": "likely_passing",
+      "evidence": [
+        "Dealer TOML and DEALER_SCOPES omit read_checkout_extensions_chat; no checkout chat extension exists."
+      ]
+    },
+    {
+      "id": "5.1.1",
+      "name": "Use theme app extensions",
+      "status": "likely_passing",
+      "evidence": [
+        "dealer-app/extensions/dealer-designer/shopify.extension.toml:2 declares type=theme.",
+        "dealer-app/extensions/dealer-designer/blocks/designer.liquid:1-10 defines the iframe app block with section target and extension JavaScript.",
+        "Dealer app scopes omit theme writes; inspected dealer runtime, shared designer and docs contain no direct Theme/Asset mutation, ScriptTag writes or manual theme-code instructions."
+      ]
+    },
+    {
+      "id": "5.1.3",
+      "name": "Include detailed onboarding instructions for theme app extensions",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/page.tsx:26-33 now gives five steps covering theme editor, page template, correct block name, saving/assigning the template and preview before public navigation.",
+        "Actual block name BHS Custom Enclosures matches dealer-app/extensions/dealer-designer/blocks/designer.liquid:7.",
+        "Shopify recommends a deep link but does not require it when detailed instructions exist; installed-store theme editor flow still needs runtime verification."
+      ]
+    },
+    {
+      "id": "5.1.5",
+      "name": "Send collected data back to the merchant",
+      "status": "likely_passing",
+      "evidence": [
+        "src/app/dealer/page.tsx:25 links to saved customer designs.",
+        "src/app/dealer/designs/page.tsx:17-27 supports protected pagination and BHS Design reference lookup.",
+        "src/app/dealer/designs/[id]/page.tsx:24-28 renders notes, logo/custom request, measurements and selections.",
+        "src/lib/dealer/merchant-designs.ts:12-40 explicitly projects all customer-controlled design fields while excluding wholesale/manufacturing credentials and private snapshots.",
+        "Both pages authenticate a merchant-purpose signed cookie and recheck installation; queries filter the signed store and individual lookup verifies returned ownership.",
+        "Dynamic pages, no-store database reads and React escaping preserve data boundaries; no actionable bug found in this follow-up."
+      ]
+    }
+  ],
+  "skippedGroups": [
+    {
+      "id": "5.2",
+      "name": "Payment",
+      "reason": "Conditional signal absent: no payment extension or gateway scope.",
+      "requirementIds": [
+        "5.2.4",
+        "5.2.5",
+        "5.2.6",
+        "5.2.7",
+        "5.2.10",
+        "5.2.11",
+        "5.2.12",
+        "5.2.13"
+      ]
+    },
+    {
+      "id": "5.3",
+      "name": "Payment facilitator",
+      "reason": "Opt-in not requested.",
+      "requirementIds": [
+        "5.3.3"
+      ]
+    },
+    {
+      "id": "5.4",
+      "name": "Purchase option",
+      "reason": "Conditional signal absent: no subscription/customer-payment-method/payment-mandate scopes.",
+      "requirementIds": [
+        "5.4.2",
+        "5.4.3",
+        "5.4.5",
+        "5.4.6",
+        "5.4.7",
+        "5.4.8",
+        "5.4.9",
+        "5.4.10",
+        "5.4.12",
+        "5.4.13",
+        "5.4.14",
+        "5.4.15",
+        "5.4.16",
+        "5.4.17",
+        "5.4.18",
+        "5.4.19"
+      ]
+    },
+    {
+      "id": "5.5",
+      "name": "Product sourcing",
+      "reason": "Opt-in not requested; business relevance to Collective does not override explicit gate.",
+      "requirementIds": [
+        "5.5.1",
+        "5.5.2",
+        "5.5.5"
+      ]
+    },
+    {
+      "id": "5.6",
+      "name": "Checkout customization",
+      "reason": "Conditional signal absent: no checkout UI extension/target; native Ajax cart is not the defined signal.",
+      "requirementIds": [
+        "5.6.2",
+        "5.6.3",
+        "5.6.5",
+        "5.6.6",
+        "5.6.7",
+        "5.6.9"
+      ]
+    },
+    {
+      "id": "5.7",
+      "name": "Sales channel",
+      "reason": "Conditional signal absent: no channel_config extension.",
+      "requirementIds": [
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.7",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.15",
+        "5.7.16",
+        "5.7.17"
+      ]
+    },
+    {
+      "id": "5.8",
+      "name": "Post purchase",
+      "reason": "Conditional signal absent: no checkout_post_purchase extension.",
+      "requirementIds": [
+        "5.8.1",
+        "5.8.2",
+        "5.8.3",
+        "5.8.4",
+        "5.8.5",
+        "5.8.6",
+        "5.8.7",
+        "5.8.8",
+        "5.8.9",
+        "5.8.10"
+      ]
+    },
+    {
+      "id": "5.9",
+      "name": "Mobile app builders",
+      "reason": "Opt-in not requested.",
+      "requirementIds": [
+        "5.9.2",
+        "5.9.3"
+      ]
+    },
+    {
+      "id": "5.10",
+      "name": "Donation",
+      "reason": "Opt-in not requested.",
+      "requirementIds": [
+        "5.10.1",
+        "5.10.2",
+        "5.10.3",
+        "5.10.5",
+        "5.10.6",
+        "5.10.7"
+      ]
+    }
+  ],
+  "liveChecks": {
+    "deployment": "dpl_276FnNjyDV5mTMFMThvzKqtYiYN2",
+    "checkedAt": "2026-09-19T17:06:20.268Z",
+    "checks": [
+      {
+        "test": "Home over verified HTTPS",
+        "status": 200,
+        "shopInputAbsent": true,
+        "shopifyGuidance": true
+      },
+      {
+        "path": "/dealer/designs",
+        "status": 307,
+        "location": "/dealer",
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/dealer/designs/11111111-2222-4333-8444-555555555555",
+        "status": 307,
+        "location": "/dealer",
+        "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/dealer/api/session",
+        "status": 401
+      },
+      {
+        "path": "/dealer/operator/catalog",
+        "status": 401
+      },
+      {
+        "path": "/dealer/webhooks",
+        "status": 401
+      }
+    ]
+  }
+}

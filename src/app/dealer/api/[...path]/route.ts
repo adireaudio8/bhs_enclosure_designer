@@ -45,7 +45,7 @@ export async function POST(req: Request, context: Context) {
       const design = await retailDesign(body);
       const option = await findPriceOption(shop, design.price);
       await verifyPriceOption(shop, option);
-      return noStore({ price: design.price, leadTimeDays: 21, baffleStatus: design.calculations.baffleCheck.status, tier: 'guest' });
+      return noStore({ price: design.price, baffleStatus: design.calculations.baffleCheck.status, tier: 'guest' });
     }
     if (path.join('/') === 'checkout') return noStore(await createCartQuote(shop, body));
     throw new DealerError('Page not found.', 404);
