@@ -2,6 +2,8 @@
 
 Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
 
+The separate dealer app (regular Shopify cart and Collective order flow) is documented in [docs/dealer-app.md](docs/dealer-app.md). It is an integration-test build; dealer ordering remains disabled until setup and pilot verification.
+
 For the full Shopify migration handoff, see:
 
 ```text

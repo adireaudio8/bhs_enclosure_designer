@@ -1,0 +1,28 @@
+# Separate dealer app registered 2026-09-19. Hosted separately from the BHS-only designer.
+# Never link this configuration to the existing BHS-only designer app.
+client_id = "0683dc0526169d9bd139c17b54f2a20d"
+name = "BHS Dealer Enclosure Designer"
+application_url = "https://bhs-dealer-enclosure-designer.vercel.app/dealer"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,read_inventory,read_locations,read_publications,read_orders,write_app_proxy"
+
+[auth]
+redirect_urls = ["https://bhs-dealer-enclosure-designer.vercel.app/dealer/callback"]
+
+[webhooks]
+api_version = "2026-04"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled", "orders/paid", "orders/updated", "orders/cancelled", "refunds/create"]
+uri = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/webhooks"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/webhooks"
+
+[app_proxy]
+url = "https://bhs-dealer-enclosure-designer.vercel.app/dealer/proxy"
+subpath = "bhs-custom-enclosures"
+prefix = "apps"
