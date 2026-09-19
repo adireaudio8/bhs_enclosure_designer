@@ -2,6 +2,8 @@
 
 Reviewed September 19, 2026 after the preparation fixes. **Not submitted and not approved.**
 
+**Live distribution blocker discovered after the local review:** Both existing registrations belong to BHS's merchant organization and cannot supply the planned external dealer distribution. A Shopify Partner organization and replacement registrations are required. This operational prerequisite was not established by the local code checks below; see [SSA pilot setup](dealer-app-ssa-pilot.md).
+
 ## Summary
 
 ✅ **Likely passing:** 33

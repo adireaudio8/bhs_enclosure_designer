@@ -1,40 +1,55 @@
 # Sound Solutions Audio pilot
 
-Prepared September 19, 2026. Registration created; no installation link, deployment, dealer installation or order activation yet.
+Updated September 19, 2026. External installation remains blocked on Partner organization setup. No dealer installation or order activation has occurred.
 
 ## Dealer identity
 
 - Business: Sound Solutions Audio (SSA).
 - Public storefront: https://store.soundsolutionsaudio.com/.
 - Shopify store: `soundsolutionsaudio.myshopify.com`, verified from the public homepage's `Shopify.shop` assignment.
-- Andrew selected SSA and confirmed it is already a BHS Collective member. This is user confirmation, not a new live audit of its relationship, eligibility or payment settings.
+- Andrew selected SSA and confirmed existing BHS Collective membership. Automatic payments and custom-enclosure terms still require live verification.
 
-## Separate pilot registration
+## Registration correction
 
-- Organization: Basshead Supply, ID `221105492`.
-- App: BHS Dealer SSA Pilot.
-- Client ID: `800856ca5643603ede0a8834c3de780f`.
-- Local configuration: `dealer-app/shopify.app.bhs-dealer-ssa-pilot.toml`.
-- Registration created successfully through the authenticated Shopify CLI. The generated configuration is an unfinished scaffold with Shopify's default app-home URLs. Do not deploy it as-is or present it as ready to install.
-- The interactive name prompt inserted a leading control character into the remote app name. The local name is corrected; synchronize and verify the remote display name during configuration/deployment.
-- No pilot credentials were exported, no pilot hosting/database access was created, and no app version was uploaded or released for this registration.
-- The shared public registration, client ID `0683dc0526169d9bd139c17b54f2a20d`, remains separate. Its configuration remains the local default.
-- Browser access to the Dev Dashboard currently requires BHS account sign-in in Codex's in-app browser. The Chrome connection timed out. The dashboard's custom-distribution selection and store-specific link generation remain pending.
+Live authenticated inspection confirmed that BHS organization `221105492` is a merchant organization. Its app pages provide organization-only installation and no Distribution card. A Shopify employee's [explanation of merchant versus Partner organizations](https://community.shopify.dev/t/failing-to-create-webhooks-with-apps-created-in-the-dev-dashboard/27109/8) matches the observed behavior. The planned external dealer distribution needs Partner-owned registrations.
+
+Existing registrations, retained without deletion:
+
+| Registration | Client ID | Dashboard | Status |
+| --- | --- | --- | --- |
+| BHS Dealer SSA Pilot | `800856ca5643603ede0a8834c3de780f` | [SSA setup registration](https://dev.shopify.com/dashboard/221105492/apps/425577447425) | Merchant-owned scaffold; unsuitable for SSA distribution; zero installs |
+| BHS Dealer Enclosure Designer | `0683dc0526169d9bd139c17b54f2a20d` | [Initial dealer registration](https://dev.shopify.com/dashboard/221105492/apps/425553231873) | Merchant-owned; not a public-app registration; zero installs |
+
+The SSA registration was created by the CLI with a default active version, `bhs-dealer-ssa-pilot-1`, version ID `1135599353857`. The earlier note saying no version existed was incorrect: the CLI created and released this default scaffold automatically. It does not contain the finished dealer configuration. Its remote name has a leading control character from the interactive prompt; the local name is corrected. Do not use this registration for a dealer installation.
+
+No pilot credentials were exported, no pilot hosting/database access was created, and no functional pilot version was deployed. The hosted implementation, SQL tables, tests and theme extension can be reused with new Partner-owned registration credentials. The original BHS-only app is separate and unchanged.
+
+## Partner account setup
+
+The `info@bassheadsupply.com` login now successfully accesses BHS. Shopify Partners shows only Create a new partner organization / Join an existing partner organization, so no existing Partner organization is attached to this login.
+
+Prepared at https://partners.shopify.com/signup/create-organization:
+
+- Main focus: Build apps.
+- Location: United States, California.
+- Business: Basshead Supply.
+- Address: 2635 Lavery Ct, Suite 13, Thousand Oaks, CA 91320.
+- Email: info@bassheadsupply.com.
+
+Location/address come from BHS's public [contact page](https://bassheadsupply.com/pages/contact-us) and [dealer agreement](https://bassheadsupply.com/dealer-application). The final form was visually checked. The [Partner Program Agreement](https://www.shopify.com/partners/terms) checkbox remains unchecked and Create partner organization has not been submitted. Explicit approval to accept these binding terms is needed before that final action. The [Partner Program is free to join](https://help.shopify.com/en/partners/partner-program/about); this does not establish later App Store registration fees or authorize any paid action.
 
 ## Remaining setup
 
-1. Open the SSA registration in the authenticated Dev Dashboard. Confirm the organization and client ID, correct the display name, and select custom distribution restricted to `soundsolutionsaudio.myshopify.com`. Do not change the shared public app's distribution.
-2. Prepare isolated pilot hosting with its own app credentials, sessions and encryption settings; finish a reviewed database-access setup. The existing dedicated Supabase key belongs to the shared dealer hosting. Do not export unrelated production settings.
-3. Resolve installation ownership before sharing database tables between app registrations. Current dealer records are keyed by shop, not app client ID. Never let two registrations overwrite the same shop's encrypted credentials or process each other's uninstall/privacy events. Plan migration to the approved public app and preservation of historic designs/orders explicitly.
-4. Replace the default pilot app URLs, configure callbacks/webhooks/proxy and the theme extension, validate, deploy, and verify hosted behavior before generating an installation-ready handoff.
-5. Generate the restricted link for Andrew to pass to SSA. The dealer owner or authorized administrator installs it. Installation must leave ordering pending.
-6. Verify Collective automatic payments on both sides and agree the custom-enclosure margin and shipping policy. The historic 20% shipping-included plan is not automatically confirmed for this pilot.
-7. Share/import a small approved set of exact-price options; verify their prices, supplier costs, publication and Collective locations. Keep unrelated price lists and retailer assignments unchanged.
-8. Test in a duplicate/unpublished theme preview. Confirm mixed carts, distinct design references, retry behavior and merchant design access before a specifically agreed live purchase.
-9. Prove supplier order creation and design matching; verify payment timing on legitimate fulfillment and cancellation/refund behavior. Keep production handling manual until authoritative matching is established.
+1. Obtain Andrew's approval for the prepared Partner signup and agreement acceptance, or use an existing authorized Partner organization he identifies. Create/verify the Partner organization before creating more app registrations.
+2. Register a separate SSA pilot under that Partner organization. Confirm the actual external custom-distribution control, restrict it to `soundsolutionsaudio.myshopify.com`, and preserve a separate Partner-owned public app for eventual review. Do not create another merchant-owned replacement.
+3. Prepare isolated pilot hosting with its own app credentials, sessions and encryption settings; finish the reviewed database-access setup. Never export unrelated production settings.
+4. Resolve installation ownership before sharing database tables between app registrations. Current dealer records are keyed by shop, not app client ID. Prevent different registrations overwriting credentials or processing each other's uninstall/privacy events. Plan public-app migration and historic design/order retention explicitly.
+5. Configure callbacks/webhooks/proxy/theme extension, validate, deploy, and verify hosted behavior before delivering an installation-ready link.
+6. Generate the restricted link for Andrew to give SSA. Its owner or authorized administrator installs it. Installation must leave ordering pending.
+7. Verify Collective automatic payments on both sides and agree margin/shipping. The historic 20% shipping-included plan is not automatically confirmed for this pilot.
+8. Share/import a small approved set of exact-price options; verify prices, supplier costs, publication and Collective locations. Preserve unrelated lists and retailer assignments.
+9. Test in an unpublished theme preview, then use a specifically agreed live purchase to prove supplier order creation, design matching, fulfillment/payment and cancellation/refund behavior. Keep production handling manual until authoritative matching is established.
 
 ## Evidence and limits
 
-The public storefront confirms only store identity. Existing Collective membership does not establish automatic-payment activation, permission to edit SSA's store or an installed app. No dealer passwords, customer data, product updates, price-list changes, messages, orders or payments were used for this preparation.
-
-Shopify's [distribution documentation](https://shopify.dev/docs/apps/launch/distribution/select-distribution-method) requires choosing custom distribution and generating an install link in the Dev Dashboard. Single-store pilot registration does not replace review of the shared public app.
+Existing Collective membership does not establish automatic-payment activation, permission to edit SSA's store or an installed app. No dealer passwords, customer data, product changes, price-list changes, messages, orders or payments were used for this preparation. No installation-ready link exists yet.

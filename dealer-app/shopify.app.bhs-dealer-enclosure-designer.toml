@@ -1,5 +1,7 @@
 # Separate dealer app registered 2026-09-19. Hosted separately from the BHS-only designer.
 # Never link this configuration to the existing BHS-only designer app.
+# Correction: this registration is merchant-owned, not a public-distribution app.
+# A Partner-owned registration is required before sharing with independent dealers.
 client_id = "0683dc0526169d9bd139c17b54f2a20d"
 name = "BHS Dealer Enclosure Designer"
 application_url = "https://bhs-dealer-enclosure-designer.vercel.app/dealer"

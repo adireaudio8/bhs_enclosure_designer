@@ -2,6 +2,8 @@
 
 Prepared September 19, 2026. **Not submitted to Shopify.** Resolve the unfinished checks below before submission.
 
+**Organization correction:** The registrations created under merchant organization `221105492` have no external distribution controls. Neither is currently a public-app registration. Create the SSA custom pilot and eventual public app under a Shopify Partner organization, retaining the source and rebinding the appropriate credentials and extension configuration. No Partner organization exists on the verified `info@bassheadsupply.com` login yet; its signup form is prepared, with agreement acceptance pending Andrew's approval.
+
 ## Release approach
 
 Run the controlled pilot with Sound Solutions Audio using a separate single-store custom app, then submit a functional shared public release before broader rollout. Hosted code updates go to the appropriate separate dealer hosting project. Theme-extension/configuration changes are released as new Shopify app versions; installed stores receive those versions. Some extension types or new protected access require additional Shopify review. Preserve the BHS-only application and keep ordering behind per-store activation checks.
@@ -37,7 +39,7 @@ Use two test environments:
 1. **Development store:** Install/open/uninstall/reinstall the app, add its theme block, and check merchant authentication and onboarding. A separate, clearly labeled test setup using ordinary test products can exercise the designer, native mixed cart, test checkout and saved-design UI. That test setup is not yet implemented. Its fixtures must remain isolated from production; it must never claim Collective eligibility or automatic settlement.
 2. **Eligible retailer store:** Verify a small real catalog shared from BHS through Collective, exact retail and supplier pricing, shipping, design-reference transfer, supplier-order creation, automatic payment eligibility/settlement, and cancellation/refund behavior. Use a separately registered single-store custom pilot app with the same source if testing before public-app approval. Do not change the shared app's distribution to custom, since Shopify distribution selection is permanent.
 
-Andrew selected Sound Solutions Audio, `soundsolutionsaudio.myshopify.com`, and confirmed its existing Collective membership on September 19, 2026. A separate SSA app registration now exists, but hosting, custom distribution, installation and Collective payment settings are not yet verified. See [SSA pilot setup](dealer-app-ssa-pilot.md). No new paid store is needed or has been purchased. The real Collective test remains pending.
+Andrew selected Sound Solutions Audio, `soundsolutionsaudio.myshopify.com`, and confirmed its existing Collective membership on September 19, 2026. The attempted SSA registration was created under BHS's merchant organization and must be replaced with a Partner-owned registration for external custom distribution. Hosting, installation and Collective payment settings remain unverified. See [SSA pilot setup](dealer-app-ssa-pilot.md). No new paid store is needed or has been purchased. The real Collective test remains pending.
 
 The public-app reviewer must have a usable path through the features claimed in the listing. Supply an English screencast, accurate test instructions and appropriate reviewer access. Explain the Collective restriction explicitly and confirm any special review arrangement with Shopify before relying on a simulated development-store flow for approval. A staging store alone does not make an unreleased public app installable on a live store.
 
@@ -45,6 +47,7 @@ Record an English screencast showing Shopify installation, theme setup using the
 
 ## Remaining submission gates
 
+- Complete Partner organization setup, then create and verify the correct custom-pilot and public-app registrations. Do not mistake a merchant-owned app's organization-install link for a dealer distribution link.
 - Complete an actual development-store installation and primary-workflow demonstration. Unit tests and an OAuth redirect check alone do not establish this.
 - Complete the real Collective pilot on an eligible live/staging retailer, or obtain an explicit review/testing arrangement from Shopify. Collective cannot be installed on ordinary development stores.
 - Prepare a verified first-release Collective catalog. The read-only manifest has 4,818 candidate prices in 49 groups; none has been approved or published as part of this task.
@@ -53,7 +56,7 @@ Record an English screencast showing Shopify installation, theme setup using the
 - Publish an app-specific privacy policy matching actual operations; complete listing/contact details and screenshots/screencast.
 - Determine required protected customer data access for `read_orders` and finish its access request before submission where needed. The order query omits customer names, emails and addresses, but order metadata and free-text notes still require accurate disclosure.
 - Resolve App Bridge applicability for this intentionally non-embedded app during final review preparation.
-- Complete the Shopify dashboard's automated checks. Browser control was unavailable during this preparation pass; no submission fields or distribution settings were changed.
+- Complete the Shopify dashboard's automated checks after the Partner-owned app registration exists. Browser inspection now works and exposed the merchant-organization registration issue; no App Store submission or external distribution setting has been saved.
 
 ## Preflight improvements
 
