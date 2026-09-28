@@ -15,3 +15,5 @@ tsconfig.tsbuildinfo
 Thumbs.db
 desktop.ini
 .vercel
+.shopify/
+.dealer-setup/

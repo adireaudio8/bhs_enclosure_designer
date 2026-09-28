@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+node_modules
+.next
+.next-*
+docs
+tests
+sql
+dealer-app
+.dealer-setup

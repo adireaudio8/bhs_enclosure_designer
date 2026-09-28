@@ -144,7 +144,14 @@ function navigateToCheckout(checkoutUrl: string) {
 type WindowSizeOption = '12x12' | '24x12';
 type WindowOrientationOption = 'landscape' | 'portrait';
 
-export default function CustomEnclosureDesigner() {
+export interface DesignerTransport {
+  request: (path: string, init?: RequestInit) => Promise<Response>;
+  addToCart: (data: { item?: unknown }) => Promise<void>;
+}
+
+export default function CustomEnclosureDesigner({ transport }: { transport?: DesignerTransport } = {}) {
+  const request = transport?.request ?? ((path: string, init?: RequestInit) => fetch(appApi(path), init));
+  const quoteRequest = useRef<{ fingerprint: string; key: string } | null>(null);
   const inputs = useEnclosureStore((s) => s.inputs);
   const calculations = useEnclosureStore((s) => s.calculations);
   const materialConfig = useEnclosureStore((s) => s.materialConfig);
@@ -220,7 +227,7 @@ export default function CustomEnclosureDesigner() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(appApi('subwoofer-catalog'))
+    request('subwoofer-catalog')
       .then(async (response) => {
         if (!response.ok) throw new Error(`Catalog lookup failed (${response.status}).`);
         return response.json() as Promise<{
@@ -366,7 +373,7 @@ export default function CustomEnclosureDesigner() {
     const handle = setTimeout(async () => {
       setPricing({ status: 'loading' });
       try {
-        const res = await fetch(appApi('design-pricing'), {
+        const res = await request('design-pricing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: inputsKey,
@@ -657,7 +664,7 @@ export default function CustomEnclosureDesigner() {
     let cancelled = false;
     const brand = selectedBrand;
 
-    fetch(appApi(`brand-logo/${encodeURIComponent(brand)}`))
+    request(`brand-logo/${encodeURIComponent(brand)}`)
       .then(async (res) => (res.ok ? res.json() : null))
       .then((data: { brand: string; eps: string } | null) => {
         if (cancelled) return;
@@ -738,13 +745,18 @@ export default function CustomEnclosureDesigner() {
     });
 
     try {
-      const res = await fetch(appApi('checkout'), {
+      const fingerprint = JSON.stringify({ inputs, designSpecs, customerNotes });
+      if (transport && (!quoteRequest.current || quoteRequest.current.fingerprint !== fingerprint)) {
+        quoteRequest.current = { fingerprint, key: crypto.randomUUID() };
+      }
+      const res = await request('checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs, designSpecs, customerNotes }),
+        body: JSON.stringify({ inputs, designSpecs, customerNotes, ...(transport ? { requestKey: quoteRequest.current?.key } : {}) }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         checkoutUrl?: string;
+        item?: unknown;
         error?: string;
       };
       if (!res.ok) {
@@ -752,6 +764,11 @@ export default function CustomEnclosureDesigner() {
           status: 'error',
           message: data.error ?? `Checkout failed (${res.status})`,
         });
+        return;
+      }
+      if (transport) {
+        await transport.addToCart(data);
+        setCartState({ status: 'idle' });
         return;
       }
       // Success — fire InitiateCheckout (matches Meta/GA4 standard
@@ -800,7 +817,7 @@ export default function CustomEnclosureDesigner() {
               Design Your Custom Enclosure
             </h1>
             <p className="text-xs sm:text-sm text-neutral-400">
-              Baltic birch and MDF · Made in California · ships in <strong className="text-white">2–3 weeks</strong>
+              {transport ? 'Baltic birch and MDF · Made in California · Contact your dealer for current build timing' : <>Baltic birch and MDF · Made in California · ships in <strong className="text-white">2–3 weeks</strong></>}
             </p>
           </div>
         </div>
@@ -1496,7 +1513,7 @@ export default function CustomEnclosureDesigner() {
               </div>
               <p className="text-[11px] text-text-muted mt-0.5 mb-2">
                 {pricing.status === 'ok'
-                  ? `ships in ${pricing.leadTimeDays} days`
+                  ? (transport ? 'Contact this store for current build and shipping timing' : `ships in ${pricing.leadTimeDays} days`)
                   : pricing.status === 'unavailable'
                   ? 'see message below'
                   : pricing.status === 'error'
@@ -1522,9 +1539,9 @@ export default function CustomEnclosureDesigner() {
                 <div className="mb-2 rounded-md border border-amber-700/40 bg-amber-950/30 p-3 text-[12px] leading-relaxed text-amber-200">
                   <p className="font-semibold mb-1">We can&apos;t price this configuration online right now.</p>
                   <p className="mb-2 text-amber-200/80">
-                    Email or call us with your specs above and we&apos;ll get you a quote.
+                    {transport ? 'Contact this store with your design details for help completing your order.' : 'Email or call us with your specs above and we’ll get you a quote.'}
                   </p>
-                  <div className="flex items-center gap-3 flex-wrap">
+                  {!transport && <div className="flex items-center gap-3 flex-wrap">
                     <a
                       href="mailto:info@bassheadsupply.com?subject=Custom%20Enclosure%20Quote%20Request"
                       className="text-amber-100 hover:text-white underline underline-offset-2"
@@ -1537,7 +1554,7 @@ export default function CustomEnclosureDesigner() {
                     >
                       (415) 740-1182
                     </a>
-                  </div>
+                  </div>}
                 </div>
               )}
               {cartState.status === 'error' && (
@@ -1554,13 +1571,13 @@ export default function CustomEnclosureDesigner() {
                 }`}
                 title={
                   canAddToCart
-                    ? 'Continue to checkout with this custom enclosure'
+                    ? (transport ? 'Add this custom enclosure to your store’s cart' : 'Continue to checkout with this custom enclosure')
                     : pricing.status === 'unavailable'
                     ? 'Contact us to complete this order'
                     : 'Resolve issues above before checkout'
                 }
               >
-                {cartState.status === 'adding' ? 'Creating checkout…' : 'Continue to Checkout'}
+                {cartState.status === 'adding' ? (transport ? 'Adding to cart…' : 'Creating checkout…') : (transport ? 'Add custom enclosure to cart' : 'Continue to Checkout')}
               </button>
           </section>
           </div>{/* close right column wrapper */}

@@ -1,0 +1,11 @@
+<div class="bhs-dealer-designer" {{ block.shopify_attributes }}>
+  <iframe class="bhs-dealer-designer__frame" title="Custom enclosure designer" src="{{ routes.root_url }}apps/bhs-custom-enclosures?cart_root={{ routes.root_url | url_encode }}" style="width:100%;min-height:850px;border:0" loading="lazy" referrerpolicy="no-referrer"></iframe>
+</div>
+{% schema %}
+{
+  "name": "BHS Custom Enclosures",
+  "target": "section",
+  "javascript": "designer.js",
+  "settings": []
+}
+{% endschema %}
