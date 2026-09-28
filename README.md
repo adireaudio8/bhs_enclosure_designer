@@ -156,3 +156,9 @@ npm run check
 GitHub Actions runs that same clean-install, regression, engine-parity, typecheck, and production-build sequence for every push to `main` and every pull request.
 
 An engine release also requires live verification of both the calculator and `https://bassheadsupply.com/apps/enclosure-designer`; a successful local build alone does not satisfy the parity rule.
+
+September 27, 2026 shared-engine update: `10d6631541c2a1bf304143f0a0c9d06b86126c22`
+matches the calculator's approved Bottom dowel-channel layout and retains the
+Top/Bottom trim allowance. Manufacturing controls remain internal to the
+calculator. Vendored/installed source parity, 21 regression tests, TypeScript
+and the production build passed for this update.
