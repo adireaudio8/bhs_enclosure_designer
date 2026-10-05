@@ -1,5 +1,7 @@
 # BHS Enclosure Designer App
 
+**October 5, 2026 engine parity:** vendored engine `228f02b0ba48712b41bdda7dcb317a474b831db1` matches the calculator's independent dual SUPB placement release. The shared automatic solver now searches circular cutout clearance around the PP2 corner after preserving established safe layouts. The internal calculator exposes independent centers; customer controls remain unchanged. The tarball, lockfile, installed source and calculator pin pass parity verification, TypeScript, 21 tests and production build. No saved customer or production design is migrated.
+
 Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
 
 For the full Shopify migration handoff, see:
