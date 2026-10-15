@@ -1,5 +1,7 @@
 # BHS Enclosure Designer App
 
+**October 15, 2026 engine parity:** vendored engine `b56e71cc470cfc7069567eed5621035be6f81128` matches the calculator's automatic triple/quad Subs Up / Port Back layout update. Valid existing rows are preserved; layouts that need more room try aligned grids and staggered rows with shared brace and cutout geometry. Invalid automatic layouts display a reason instead of overlapping preview drivers. No saved designs, dimensions, acoustic settings or customer controls are migrated. The paired release requires parity verification, both builds and live deployment checks below.
+
 **October 5, 2026 engine parity:** vendored engine `228f02b0ba48712b41bdda7dcb317a474b831db1` matches the calculator's independent dual SUPB placement release. The shared automatic solver now searches circular cutout clearance around the PP2 corner after preserving established safe layouts. The internal calculator exposes independent centers; customer controls remain unchanged. The tarball, lockfile, installed source and calculator pin pass parity verification, TypeScript, 21 tests and production build. No saved customer or production design is migrated.
 
 Vercel-hosted custom Shopify app for the interactive Basshead Supply custom enclosure designer.
@@ -47,7 +49,7 @@ The website UI intentionally exposes a customer-safe subset of the internal Desi
 Current coordinated engine revision:
 
 ```text
-45e2b796f364035b696aeb81ab39cfad772bbfa3
+b56e71cc470cfc7069567eed5621035be6f81128
 ```
 
 To refresh the vendored engine:
