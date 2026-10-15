@@ -1782,6 +1782,7 @@ export default function CustomEnclosureDesigner() {
           border-radius: 0.5rem;
         }
         :global(.bhs-viewer-shell > div > div:first-child) {
+          flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1809,9 +1810,34 @@ export default function CustomEnclosureDesigner() {
         :global(.bhs-viewer-shell button:hover) {
           background: rgb(64 64 64);
         }
-        :global(.bhs-viewer-shell > div > div:last-child) {
-          flex: 1 1 auto;
+        :global(.bhs-viewer-shell > div > div:nth-child(2)) {
+          flex: 1 1 0;
           min-height: 0;
+        }
+        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"]) {
+          flex-shrink: 0;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.4rem 1.25rem;
+          padding: 0.6rem 0.75rem;
+          border-top: 1px solid rgb(38 38 38);
+          background: rgb(17 17 17);
+          color: rgb(245 245 245);
+          font-size: 0.75rem;
+          line-height: 1.2rem;
+        }
+        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"] > div) {
+          display: flex;
+          align-items: baseline;
+          gap: 0.4rem;
+        }
+        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"] dt) {
+          color: rgb(163 163 163);
+        }
+        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"] dd) {
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
         }
         :global(.bhs-viewer-shell canvas) {
           height: 100% !important;
