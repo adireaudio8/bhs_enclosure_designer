@@ -1810,7 +1810,7 @@ export default function CustomEnclosureDesigner() {
         :global(.bhs-viewer-shell button:hover) {
           background: rgb(64 64 64);
         }
-        :global(.bhs-viewer-shell > div > div:nth-child(2)) {
+        :global(.bhs-viewer-shell [data-enclosure-canvas]) {
           flex: 1 1 0;
           min-height: 0;
         }
