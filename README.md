@@ -1,5 +1,7 @@
 # BHS Enclosure Designer App
 
+**October 15, 2026 viewer release:** engine `612a67fab7f7b9cb8b3dc905931dfaea3359f553` matches the calculator's acoustic-specification update. Full dimensions shows net airspace, tuning and total port area. Shared PNG exports include a bottom-right specification box, with Each port only for dual-port enclosures. Export geometry is frozen for each image set. The internal calculator also adds an image-only download control to its pop-out; no manufacturing controls are exposed to customers. Owner approved the paired release; parity, TypeScript, 21 designer tests and both app builds pass.
+
 **October 15, 2026 engine parity:** vendored engine `b56e71cc470cfc7069567eed5621035be6f81128` matches the calculator's automatic triple/quad Subs Up / Port Back layout update. Valid existing rows are preserved; layouts that need more room try aligned grids and staggered rows with shared brace and cutout geometry. Invalid automatic layouts display a reason instead of overlapping preview drivers. No saved designs, dimensions, acoustic settings or customer controls are migrated. The paired release requires parity verification, both builds and live deployment checks below.
 
 **October 5, 2026 engine parity:** vendored engine `228f02b0ba48712b41bdda7dcb317a474b831db1` matches the calculator's independent dual SUPB placement release. The shared automatic solver now searches circular cutout clearance around the PP2 corner after preserving established safe layouts. The internal calculator exposes independent centers; customer controls remain unchanged. The tarball, lockfile, installed source and calculator pin pass parity verification, TypeScript, 21 tests and production build. No saved customer or production design is migrated.
@@ -49,7 +51,7 @@ The website UI intentionally exposes a customer-safe subset of the internal Desi
 Current coordinated engine revision:
 
 ```text
-b56e71cc470cfc7069567eed5621035be6f81128
+612a67fab7f7b9cb8b3dc905931dfaea3359f553
 ```
 
 To refresh the vendored engine:
