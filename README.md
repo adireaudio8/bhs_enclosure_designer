@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 19, 2026 shared-engine release:** vendored engine
+`8c191e8ecc0c67005949e3288709fec77898c4e4` adds frozen custom subwoofer contours
+for area, fit, preview and manufacturing consistency. The internal calculator
+owns model/size EPS uploads; this update adds no customer upload or manufacturing
+controls. Existing round designs retain their behavior. Parity verification,
+TypeScript, all 21 designer tests and production build pass locally. Andrew
+approved publishing both apps; the additive calculator database setup is installed.
+
 **October 15, 2026 viewer release:** engine `612a67fab7f7b9cb8b3dc905931dfaea3359f553` matches the calculator's acoustic-specification update. Full dimensions shows net airspace, tuning and total port area. Shared PNG exports include a bottom-right specification box, with Each port only for dual-port enclosures. Export geometry is frozen for each image set. The internal calculator also adds an image-only download control to its pop-out; no manufacturing controls are exposed to customers. Owner approved the paired release; parity, TypeScript, 21 designer tests and both app builds pass.
 
 The designer's dark viewer shell explicitly sizes the canvas as its second child and reserves space for the optional specification footer. A last-child selector no longer fits the viewer structure once the footer is present. The correction was checked in the built application: the footer stays within the viewer bounds and uses matching dark-theme colors.
