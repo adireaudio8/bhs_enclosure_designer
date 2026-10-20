@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 20, 2026 shared-engine release:** vendored engine
+`2c51a558ead33f7da19917c26e19841bdee86915` preserves original custom-cutout
+EPS curves and uses the logo curve-to-DXF converter for manufacturing. Legacy
+profiles remain readable; generating their cutting files requires an explicit
+source EPS/profile update in the internal calculator. Existing customer designs
+and controls are preserved. The calculator adds blocking XXL validation.
+Andrew approved publishing both consumers with the same engine revision.
+
 **October 19, 2026 shared-engine release:** vendored engine
 `8c191e8ecc0c67005949e3288709fec77898c4e4` adds frozen custom subwoofer contours
 for area, fit, preview and manufacturing consistency. The internal calculator
