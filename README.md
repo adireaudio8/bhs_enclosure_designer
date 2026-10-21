@@ -1,5 +1,11 @@
 # BHS Enclosure Designer App
 
+**October 21, 2026 trim retirement:** engine
+`1bf28556f5a9014d72fbf677e1197218dbf53421` matches the calculator's removal
+of Top/Bottom sacrificial trim stock. Nominal calculations, holes, ACC and milling
+remain unchanged. Customer controls are unchanged. The calculator owns the
+backed-up correction of its stored manufacturing files.
+
 **October 21, 2026 milling and glue-clearance release:** vendored engine
 `bd45d2de66482400ee727b147e96cc4df9217b65` matches the calculator's derived
 manufacturing geometry. Finished mating thickness and drilling now follow stock
