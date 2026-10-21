@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 21, 2026 milling and glue-clearance release:** vendored engine
+`bd45d2de66482400ee727b147e96cc4df9217b65` matches the calculator's derived
+manufacturing geometry. Finished mating thickness and drilling now follow stock
+thickness, duty-specific mill-down depth and glue clearance, including dual-port
+alignment. Customer controls are unchanged; manufacturing controls stay in the
+internal calculator. Owner approved the coordinated release. Clean packaging,
+source/lockfile parity, TypeScript and the production build passed.
+
 **October 20, 2026 shared-engine release:** vendored engine
 `2c51a558ead33f7da19917c26e19841bdee86915` preserves original custom-cutout
 EPS curves and uses the logo curve-to-DXF converter for manufacturing. Legacy
