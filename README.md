@@ -1,5 +1,12 @@
 # BHS Enclosure Designer App
 
+**October 23, 2026 rear-wall terminal:** engine
+`2e22b9a1423b6a43e879cf902e51ca3c9137c1e0` adds **Back — Top panel** for
+Subs Up/Port Up. Preview and cutting output share the upright rear-wall location;
+the full internal plate clears ports, walls and braces. Unsafe Top placement
+blocks checkout in the UI and API. Existing Back values remain underneath,
+and Back's preview retains its full width. No saved designs are rewritten.
+
 **October 23, 2026 preview camera:** shared engine
 `c6f4c7dbdd53eb0bcf7dec9ff94ea6a10754c293` fixes Reset after view-cube
 rotation, fits the viewport and adds measured outside-frame outlines to the

@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import {
   calculateEnclosure,
   checkSubwooferPlacement,
+  checkTerminalPlacement,
   generateCutList,
   resolveTerminalPanel,
+  terminalPanelLabel,
   resolveWindowDimensions,
   resolveWindowPanel,
   type EnclosureInputs,
@@ -203,6 +205,13 @@ export async function POST(req: Request) {
   const terminalPanel = resolveTerminalPanel(inputs);
   const terminalCustomized =
     inputs.terminalPanel !== undefined || inputs.terminalXOffset !== undefined;
+  if (terminalPanel === 'Top') {
+    const terminalCheck = checkTerminalPlacement(inputs, calculations, generateCutList(inputs, calculations), 'Top');
+    if (!terminalCheck.safe) return NextResponse.json(
+      { error: terminalCheck.conflict?.label ?? 'Rear-wall terminal placement is unsafe.' },
+      { status: 422 },
+    );
+  }
   const windowEnabled = !!inputs.windowEnabled;
   const windowPanel = windowEnabled ? resolveWindowPanel(inputs) : 'None';
   const windowDimensions = windowEnabled
@@ -250,7 +259,7 @@ export async function POST(req: Request) {
     `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
     `Top logo: ${topLogo.displayLabel}`,
-    `Terminal cup: ${terminalPanel}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; Y fixed 2.125" from panel bottom`,
+    `Terminal cup: ${terminalPanelLabel(terminalPanel, inputs)}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; opening 2.125" from ${terminalPanel === 'Top' ? 'outside bottom edge (far Y edge of Top DXF)' : 'panel bottom'}`,
     `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
     `Pricing tier: ${validated.tier}`,
     `Lead time: ${validated.leadTimeDays} days`,

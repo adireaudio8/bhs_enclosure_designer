@@ -33,6 +33,9 @@ import {
   SUBWOOFER_QUANTITIES,
   PORT_QUANTITIES,
   checkTerminalPlacement,
+  terminalPanelLabel,
+  type TerminalHostPanel,
+  type TerminalPanel,
   checkSubwooferPlacement,
   checkWindowPlacement,
   findNearestSafeOffsets,
@@ -462,7 +465,8 @@ export default function CustomEnclosureDesigner() {
     pricing.status === 'ok' &&
     calculations.baffleCheck.status !== 'DOES NOT FIT' &&
     subwooferPlacementSafe &&
-    resolvedTopLogoRequest.valid;
+    resolvedTopLogoRequest.valid &&
+    (inputs.terminalPanel !== 'Top' || checkTerminalPlacement(inputs, calculations, cutList, 'Top').safe);
 
   function handleSubwooferPositionEnable(enabled: boolean) {
     setHasInteracted(true);
@@ -497,7 +501,7 @@ export default function CustomEnclosureDesigner() {
   // Geometry-bound panel: when 'None' is selected we still need a placeholder
   // for X-offset math (which gets ignored), so default to Side Left for the
   // safety/width helpers below. The user-visible state stays 'None'.
-  const currentTerminalPanel: 'Side Left' | 'Back' =
+  const currentTerminalPanel: TerminalHostPanel =
     inputs.terminalPanel === 'None'
       ? resolvedTerminalPanel === 'None'
         ? 'Side Left'
@@ -515,7 +519,7 @@ export default function CustomEnclosureDesigner() {
         currentTerminalPanel,
         currentTerminalOffset,
       );
-  const terminalPanelWidth = panelWidthInches(currentTerminalPanel, inputs, calculations);
+  const terminalPanelWidth = panelWidthInches(currentTerminalPanel, inputs, calculations, cutList);
   const maxTerminalOffset = Math.max(
     0,
     terminalPanelWidth / 2 - TERMINAL_HALF_WIDTH - SAFETY_BORDER,
@@ -527,7 +531,7 @@ export default function CustomEnclosureDesigner() {
       // "Customize" turns ON: seed with the resolved default panel +
       // centered offset, but never seed 'None' here (operator opts into
       // 'None' explicitly via the panel dropdown).
-      const seed: 'Side Left' | 'Back' =
+      const seed: TerminalHostPanel =
         resolvedTerminalPanel === 'None' ? 'Side Left' : resolvedTerminalPanel;
       setInputs({ terminalPanel: seed, terminalXOffset: 0 });
     } else {
@@ -1365,7 +1369,7 @@ export default function CustomEnclosureDesigner() {
             </div>
             {!isTerminalCustomized ? (
               <p className="text-[11px] text-text-muted">
-                Default: <span className="text-neutral-300 font-mono">{resolvedTerminalPanel}</span>{' '}
+                Default: <span className="text-neutral-300 font-mono">{terminalPanelLabel(resolvedTerminalPanel, inputs)}</span>{' '}
                 panel,
                 centered, 2.125&quot; from bottom. Check &ldquo;Customize&rdquo; to override or skip.
               </p>
@@ -1377,7 +1381,7 @@ export default function CustomEnclosureDesigner() {
                       className="select-base"
                       value={inputs.terminalPanel ?? 'Side Left'}
                       onChange={(e) => {
-                        const next = e.target.value as 'Side Left' | 'Back' | 'None';
+                        const next = e.target.value as TerminalPanel;
                         setHasInteracted(true);
                         if (next === 'None') {
                           // No cup: clear the X offset so the saved data
@@ -1389,7 +1393,8 @@ export default function CustomEnclosureDesigner() {
                       }}
                     >
                       <option value="Side Left">Side Left</option>
-                      <option value="Back">Back</option>
+                      {(inputs.enclosureConfiguration === 'Subs Up/Port Up' || currentTerminalPanel === 'Top') && <option value="Top">{terminalPanelLabel('Top', inputs)}</option>}
+                      <option value="Back">{terminalPanelLabel('Back', inputs)}</option>
                       <option value="None">No Terminal Cup</option>
                     </select>
                   </Field>
@@ -1417,6 +1422,7 @@ export default function CustomEnclosureDesigner() {
                     </Field>
                   )}
                 </div>
+                {currentTerminalPanel === 'Top' && <p className="mt-2 text-[11px] text-text-muted">Upright rear wall; opening starts 2.125&quot; above the outside bottom edge.</p>}
                 {isNoTerminalCup ? (
                   <p className="mt-2 text-[11px] text-amber-300/80">
                     No terminal cup will be cut. Wire-through will be the
@@ -1426,11 +1432,7 @@ export default function CustomEnclosureDesigner() {
                   !terminalPlacementCheck.safe && (
                     <div className="mt-2 flex items-center justify-between gap-2 p-2 bg-red-950/40 border border-red-900/60 rounded text-[11px] text-red-300">
                       <span>
-                        ⚠ Conflicts with{' '}
-                        <span className="font-mono">
-                          {terminalPlacementCheck.conflict?.reason ?? 'a no-go zone'}
-                        </span>{' '}
-                        on the {currentTerminalPanel} panel.
+                        {terminalPlacementCheck.conflict?.label ?? 'Terminal placement is outside the safe area.'}
                       </span>
                       <button
                         type="button"
