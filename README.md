@@ -1,5 +1,12 @@
 # BHS Enclosure Designer App
 
+**October 23, 2026 independent-position parity:** engine
+`446ddce1517d141c50f15e51d3966731fd8a0371` matches the calculator
+release for one-through-four saved subwoofer centers on Top and baffle, including
+preview, flush parts, custom outlines and manufacturing validation. Customer
+controls remain unchanged; internal position controls belong to the calculator.
+No saved customer design is rewritten.
+
 **October 21, 2026 trim retirement:** engine
 `1bf28556f5a9014d72fbf677e1197218dbf53421` matches the calculator's removal
 of Top/Bottom sacrificial trim stock. Nominal calculations, holes, ACC and milling
