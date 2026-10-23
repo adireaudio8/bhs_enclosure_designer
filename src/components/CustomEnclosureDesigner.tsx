@@ -1814,15 +1814,24 @@ export default function CustomEnclosureDesigner() {
           flex: 1 1 0;
           min-height: 0;
         }
-        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"]) {
+        :global(.bhs-viewer-shell [data-enclosure-specifications]) {
           flex-shrink: 0;
+          padding: 0.6rem 0.75rem;
+          border-top: 1px solid rgb(38 38 38);
+          background: rgb(17 17 17);
+        }
+        :global(.bhs-viewer-shell [data-enclosure-specifications] > p) {
+          color: rgb(147 197 253);
+          font-size: 0.7rem;
+          line-height: 1rem;
+          margin-bottom: 0.3rem;
+          text-align: center;
+        }
+        :global(.bhs-viewer-shell dl[aria-label="Enclosure specifications"]) {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
           gap: 0.4rem 1.25rem;
-          padding: 0.6rem 0.75rem;
-          border-top: 1px solid rgb(38 38 38);
-          background: rgb(17 17 17);
           color: rgb(245 245 245);
           font-size: 0.75rem;
           line-height: 1.2rem;

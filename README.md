@@ -1,5 +1,12 @@
 # BHS Enclosure Designer App
 
+**October 23, 2026 preview camera:** shared engine
+`c6f4c7dbdd53eb0bcf7dec9ff94ea6a10754c293` fixes Reset after view-cube
+rotation, fits the viewport and adds measured outside-frame outlines to the
+existing Full dimensions mode. The footer retains the customer dark theme.
+No manufacturing rules or saved customer designs change; the generic cone and
+basket remain illustrative.
+
 **October 23, 2026 brace-clearance follow-up:** engine
 `6db1fde16a6f3bc13305efc887e27910840bf76c` matches the calculator's rule:
 actual brace stock plus 0.250 inch on each side outside the subwoofer frames.
