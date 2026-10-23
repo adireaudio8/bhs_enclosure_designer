@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 23, 2026 brace-clearance follow-up:** engine
+`6db1fde16a6f3bc13305efc887e27910840bf76c` matches the calculator's rule:
+actual brace stock plus 0.250 inch on each side outside the subwoofer frames.
+Moving braces, fit verdicts, preview and manufacturing positions agree. Tight
+legacy designs with a brace underneath the frame can now fail fit. Customer
+controls remain unchanged. No saved designs are rewritten. Engine parity,
+TypeScript, production build and all 21 customer-app tests pass.
+
 **October 23, 2026 independent-position parity:** engine
 `446ddce1517d141c50f15e51d3966731fd8a0371` matches the calculator
 release for one-through-four saved subwoofer centers on Top and baffle, including
