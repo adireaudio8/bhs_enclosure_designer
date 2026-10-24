@@ -1422,7 +1422,7 @@ export default function CustomEnclosureDesigner() {
                     </Field>
                   )}
                 </div>
-                {currentTerminalPanel === 'Top' && <p className="mt-2 text-[11px] text-text-muted">Upright rear wall; opening starts 2.125&quot; above the outside bottom edge.</p>}
+                {currentTerminalPanel === 'Top' && <p className="mt-2 text-[11px] text-text-muted">Upright rear wall; opening starts 2.125&quot; above the inside floor. Floor panel thickness is added automatically.</p>}
                 {isNoTerminalCup ? (
                   <p className="mt-2 text-[11px] text-amber-300/80">
                     No terminal cup will be cut. Wire-through will be the

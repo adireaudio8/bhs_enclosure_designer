@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 24, 2026 rear-wall height correction:** engine
+`84637aad79e019d3c197114bd32520cb72d57a2d` places the opening at a
+fixed 2.125 inches above the inside floor. The shared engine adds cut-list
+Back's full stock thickness (0.945 inches for HD birch), moving the preview,
+backing plate, clearance checks and Top manufacturing output together. UI and
+checkout notes describe the inside-floor reference. No adjustment control,
+saved-design rewrite, automatic Side Left change or corner-rendering change.
+
 **October 23, 2026 rear-wall terminal:** engine
 `2e22b9a1423b6a43e879cf902e51ca3c9137c1e0` adds **Back — Top panel** for
 Subs Up/Port Up. Preview and cutting output share the upright rear-wall location;

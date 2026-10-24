@@ -259,7 +259,7 @@ export async function POST(req: Request) {
     `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
     `Top logo: ${topLogo.displayLabel}`,
-    `Terminal cup: ${terminalPanelLabel(terminalPanel, inputs)}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; opening 2.125" from ${terminalPanel === 'Top' ? 'outside bottom edge (far Y edge of Top DXF)' : 'panel bottom'}`,
+    `Terminal cup: ${terminalPanelLabel(terminalPanel, inputs)}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; opening 2.125" from ${terminalPanel === 'Top' ? 'inside floor (floor stock thickness added above outside bottom)' : 'panel bottom'}`,
     `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
     `Pricing tier: ${validated.tier}`,
     `Lead time: ${validated.leadTimeDays} days`,
