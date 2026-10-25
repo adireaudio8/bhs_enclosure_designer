@@ -1,5 +1,12 @@
 # BHS Enclosure Designer App
 
+**October 25, 2026 rear terminal preview:** engine
+`2d5b48cfba20be26122967ee259c2a4ba6790a19` removes the dark corner facet
+lines and adds the missing outside 1/4-inch round-over on Back and SUPP Top.
+R/O shows smooth curved surfaces with subtle tangent outlines. Opening size,
+floor-relative height, backing plate, DXF and ACC are unchanged. No stored
+design changes or cutting-file regeneration is needed for this visual fix.
+
 **October 24, 2026 rear-wall height correction:** engine
 `84637aad79e019d3c197114bd32520cb72d57a2d` places the opening at a
 fixed 2.125 inches above the inside floor. The shared engine adds cut-list
