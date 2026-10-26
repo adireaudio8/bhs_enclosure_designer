@@ -1,5 +1,12 @@
 # BHS Enclosure Designer App
 
+**October 26, 2026 cardboard layout:** shared engine
+`a56175c96c602de6e10fd17615f9404d78af5879` now selects one, two or four
+carton pieces against 48 x 96-inch stock. Oversized two-piece blanks become
+two Long and two Short walls; shared cardboard costs use four sheets.
+Calculator and designer engine parity, types, production build and tests pass.
+No customer design inputs or wood geometry are changed.
+
 **October 25, 2026 rear terminal preview:** engine
 `2d5b48cfba20be26122967ee259c2a4ba6790a19` removes the dark corner facet
 lines and adds the missing outside 1/4-inch round-over on Back and SUPP Top.
