@@ -1,5 +1,15 @@
 # BHS Enclosure Designer App
 
+**October 27, 2026 Side Left terminal alignment:** shared engine
+`10d3d9203585b2c1a56de8fc2b284b8c3b9be91f` resolves automatic placement
+from finished panel width and actual Port Piece 2 stock. The preview opening and
+outside roundover now share one surface, including rotated/shifted SUPP cups.
+Customize adopts the automatic position; explicit saved offsets stay unchanged.
+Checkout notes/options record the resolved position rather than reporting zero.
+Rear Top/Back placement and customer pricing/checkout behavior are unchanged.
+No stored designs or production files are rewritten. Calculator and designer
+must keep the same engine revision.
+
 **October 26, 2026 cardboard layout:** shared engine
 `a56175c96c602de6e10fd17615f9404d78af5879` now selects one, two or four
 carton pieces against 48 x 96-inch stock. Oversized two-piece blanks become

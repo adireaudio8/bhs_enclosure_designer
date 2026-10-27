@@ -5,6 +5,7 @@ import {
   checkTerminalPlacement,
   generateCutList,
   resolveTerminalPanel,
+  resolveTerminalPlacementOffset,
   terminalPanelLabel,
   resolveWindowDimensions,
   resolveWindowPanel,
@@ -203,6 +204,8 @@ export async function POST(req: Request) {
 
   const estimatedWeightPounds = estimateShippingWeightPounds(specs);
   const terminalPanel = resolveTerminalPanel(inputs);
+  const terminalOffset = terminalPanel === 'None' ? 0
+    : resolveTerminalPlacementOffset(inputs, calculations, generateCutList(inputs, calculations), terminalPanel);
   const terminalCustomized =
     inputs.terminalPanel !== undefined || inputs.terminalXOffset !== undefined;
   if (terminalPanel === 'Top') {
@@ -259,7 +262,7 @@ export async function POST(req: Request) {
     `Extended port routing: ${yesNo(labyrinthActive)}; folds ${labyrinthFoldCount}`,
     `Flush mount: ${yesNo(inputs.recessedMounting)}`,
     `Top logo: ${topLogo.displayLabel}`,
-    `Terminal cup: ${terminalPanelLabel(terminalPanel, inputs)}${terminalCustomized ? `, X offset ${signedInch(inputs.terminalXOffset ?? 0)}` : ', default placement'}; opening 2.125" from ${terminalPanel === 'Top' ? 'inside floor (floor stock thickness added above outside bottom)' : 'panel bottom'}`,
+    `Terminal cup: ${terminalPanelLabel(terminalPanel, inputs)}${terminalCustomized ? `, X offset ${signedInch(terminalOffset)}` : `, automatic X offset ${signedInch(terminalOffset)}`}; ${terminalPanel === 'Side Left' && inputs.enclosureConfiguration === 'Subs Up/Port Up' ? 'opening centered across panel height' : `opening 2.125" from ${terminalPanel === 'Top' ? 'inside floor (floor stock thickness added above outside bottom)' : 'panel bottom'}`}`,
     `Plexi window: ${windowEnabled ? `${windowSize} on ${windowPanel}; plate ${inch(windowDimensions.plateW)} x ${inch(windowDimensions.plateH)}; cutout ${inch(windowDimensions.cutoutW)} x ${inch(windowDimensions.cutoutH)}; offset X ${signedInch(inputs.windowXOffset ?? 0)}, Y ${signedInch(inputs.windowYOffset ?? 0)}; corner radius ${inch(inputs.windowCornerRadius ?? 0.125, 3)}` : 'None'}`,
     `Pricing tier: ${validated.tier}`,
     `Lead time: ${validated.leadTimeDays} days`,
@@ -298,7 +301,7 @@ export async function POST(req: Request) {
     options: {
       terminalPanel,
       terminalCustomized,
-      terminalXOffset: round(inputs.terminalXOffset ?? 0, 3),
+      terminalXOffset: round(terminalOffset, 3),
       windowEnabled,
       windowPanel,
       windowSize,

@@ -45,6 +45,7 @@ import {
   panelWidthInches,
   resolveDefaultWindowOffsets,
   resolveTerminalPanel,
+  resolveTerminalPlacementOffset,
   resolveWindowDimensions,
   resolveWindowPanel,
   SAFETY_BORDER,
@@ -507,7 +508,7 @@ export default function CustomEnclosureDesigner() {
         ? 'Side Left'
         : resolvedTerminalPanel
       : (inputs.terminalPanel ?? (resolvedTerminalPanel === 'None' ? 'Side Left' : resolvedTerminalPanel));
-  const currentTerminalOffset = inputs.terminalXOffset ?? 0;
+  const currentTerminalOffset = resolveTerminalPlacementOffset(inputs, calculations, cutList, currentTerminalPanel);
   // Skip the live placement check when there's no cup to place — there's
   // nothing to validate against the no-go bands.
   const terminalPlacementCheck = isNoTerminalCup
@@ -529,14 +530,14 @@ export default function CustomEnclosureDesigner() {
     setHasInteracted(true);
     if (enabled) {
       // "Customize" turns ON: seed with the resolved default panel +
-      // centered offset, but never seed 'None' here (operator opts into
+      // automatic offset, but never seed 'None' here (operator opts into
       // 'None' explicitly via the panel dropdown).
       const seed: TerminalHostPanel =
         resolvedTerminalPanel === 'None' ? 'Side Left' : resolvedTerminalPanel;
-      setInputs({ terminalPanel: seed, terminalXOffset: 0 });
+      setInputs({ terminalPanel: seed, terminalXOffset: resolveTerminalPlacementOffset(inputs, calculations, cutList, seed) });
     } else {
       // "Customize" turns OFF: clear both fields so the design reverts to
-      // the legacy hardcoded behavior (panel by config, centered).
+      // automatic placement for the current panel and configuration.
       setInputs({ terminalPanel: undefined, terminalXOffset: undefined });
     }
   }
@@ -1371,7 +1372,10 @@ export default function CustomEnclosureDesigner() {
               <p className="text-[11px] text-text-muted">
                 Default: <span className="text-neutral-300 font-mono">{terminalPanelLabel(resolvedTerminalPanel, inputs)}</span>{' '}
                 panel,
-                centered, 2.125&quot; from bottom. Check &ldquo;Customize&rdquo; to override or skip.
+                {inputs.enclosureConfiguration === 'Subs Up/Port Up' && currentTerminalPanel === 'Side Left'
+                  ? ` centered across the panel, offset ${currentTerminalOffset.toFixed(3)}″ along its depth to clear the port.`
+                  : ' centered, opening starts 2.125″ from the panel bottom.'}
+                {' '}Check &ldquo;Customize&rdquo; to override or skip.
               </p>
             ) : (
               <>
