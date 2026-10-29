@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**October 28, 2026 export angles:** shared engine
+`eaaee74959eaccb1bfe12ae3f0310de65d298ae5` follows the listing's Front-Left,
+Front-Right and centered Front photo views. Clean/dimensioned exports retain
+six PNGs, and acrylic-window designs keep the extra feature view. Interactive
+camera Reset, customer controls, pricing, checkout and CNC geometry are unchanged.
+This adoption keeps the customer designer and calculator on the same engine.
+
+
 **October 27, 2026 Side Left terminal alignment:** shared engine
 `10d3d9203585b2c1a56de8fc2b284b8c3b9be91f` resolves automatic placement
 from finished panel width and actual Port Piece 2 stock. The preview opening and
