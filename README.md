@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**November 5, 2026 finishing-cost parity:** shared engine
+`dfc7815c056b75b17b0cff9ed221c2dd802201a9` supports four independent
+Performance/Foundation × Birch/MDF finishing-labor rates. Legacy settings preserve
+their existing costs. These internal cost controls belong to the calculator;
+customer inputs, geometry, selling prices and checkout behavior are unchanged.
+Clean vendoring, source/installed/lockfile parity, TypeScript, production build
+and all 21 designer tests pass. No saved designs are rewritten.
+
 **October 28, 2026 export angles:** shared engine
 `eaaee74959eaccb1bfe12ae3f0310de65d298ae5` follows the listing's Front-Left,
 Front-Right and centered Front photo views. Clean/dimensioned exports retain
