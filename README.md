@@ -1,5 +1,15 @@
 # BHS Enclosure Designer App
 
+**November 13, 2026 side port height and subwoofer placement:** shared engine
+`274568b37e0ae5a62b5dd26b4e1ed79e4654163b` lets the height of a side-mounted round port
+be set, and places the subwoofer to the right of an elbowed side tube where that
+leaves more mounting depth. Both act only on round-port designs, which are made in
+the calculator only; the customer designer offers no control for the round port, so
+customer inputs, geometry, prices and checkout are unchanged and slot designs
+calculate exactly as before. Clean vendoring, source/installed/lockfile parity,
+TypeScript, production build and all 21 designer tests pass. No saved designs
+are rewritten.
+
 **November 13, 2026 round flared port in the side:** shared engine
 `4e847b0ebcfdcfe74db93f4a8f5327702b5e8681` lets the round flared port mount in the right
 side panel as well as in the baffle. The location is chosen per design in the
