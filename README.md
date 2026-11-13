@@ -1,5 +1,13 @@
 # BHS Enclosure Designer App
 
+**November 13, 2026 round flared port:** shared engine
+`97d1ece96358e389a043e148290645c3cf9d5469` adds a round tube port flared on both
+ends as an alternative to the slot port. The option is switched on per design in
+the calculator only; the customer designer offers no control for it, so customer
+inputs, geometry, prices and checkout are unchanged and slot designs calculate
+exactly as before. Clean vendoring, source/installed/lockfile parity, TypeScript,
+production build and all 21 designer tests pass. No saved designs are rewritten.
+
 **November 5, 2026 finishing-cost parity:** shared engine
 `dfc7815c056b75b17b0cff9ed221c2dd802201a9` supports four independent
 Performance/Foundation × Birch/MDF finishing-labor rates. Legacy settings preserve
