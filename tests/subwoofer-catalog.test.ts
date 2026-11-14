@@ -15,6 +15,14 @@ describe('customer subwoofer catalog', () => {
     ])).toEqual(['JL Audio', 'Sundown Audio']);
   });
 
+  it('leaves out brands whose logo must never be used', () => {
+    expect(buildCustomerLogoChoices([
+      { name: 'Sundown Audio' },
+      { name: 'Protective Brand' },
+      { name: 'JL Audio' },
+    ], new Set(['protective brand']))).toEqual(['JL Audio', 'Sundown Audio']);
+  });
+
   it('uses the shared brand model list and attaches conservative size-specific specs', () => {
     const catalog = buildCustomerSubwooferCatalog(
       [

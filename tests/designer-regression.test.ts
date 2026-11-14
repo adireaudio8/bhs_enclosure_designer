@@ -138,6 +138,38 @@ describe('customer enclosure regression boundary', () => {
     });
   });
 
+  it('never uses the logo of a brand marked "Never use this brand\'s logo"', () => {
+    const never = new Set(['protective brand']);
+    // Matching such a subwoofer brand means no top logo, recorded as such.
+    expect(resolveTopLogoRequest(undefined, undefined, 'Protective Brand', never)).toMatchObject({
+      selection: TOP_LOGO_NONE,
+      mode: 'none',
+      logoName: '',
+      displayLabel: 'No top logo (Protective Brand does not allow its logo)',
+      valid: true,
+      blockedBrand: 'Protective Brand',
+    });
+    // Choosing that logo outright is refused.
+    expect(resolveTopLogoRequest('protective brand', '', 'Sundown Audio', never)).toMatchObject({
+      mode: 'brand',
+      valid: false,
+      blockedBrand: 'protective brand',
+    });
+    // Other brands, no logo and custom requests are unaffected.
+    expect(resolveTopLogoRequest(undefined, undefined, 'Sundown Audio', never)).toMatchObject({
+      mode: 'match-brand',
+      logoName: 'Sundown Audio',
+      valid: true,
+      blockedBrand: '',
+    });
+    expect(resolveTopLogoRequest('JL Audio', '', 'Protective Brand', never)).toMatchObject({
+      mode: 'brand',
+      logoName: 'JL Audio',
+      valid: true,
+    });
+    expect(resolveTopLogoRequest(TOP_LOGO_CUSTOM, 'Our shop name', 'Protective Brand', never).valid).toBe(true);
+  });
+
   it('requires, sanitizes, and bounds a custom top-logo request', () => {
     expect(resolveTopLogoRequest(TOP_LOGO_CUSTOM, '   ', 'Sundown Audio').valid).toBe(false);
 

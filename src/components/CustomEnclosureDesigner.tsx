@@ -181,6 +181,9 @@ export default function CustomEnclosureDesigner() {
   const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [customerNotes, setCustomerNotes] = useState('');
   const [logoOptions, setLogoOptions] = useState<string[]>([]);
+  // Brands (names, lower case) whose logo is never shown or cut ("Never use this
+  // brand's logo" in the calculator): matching such a subwoofer brand means no top logo.
+  const [noLogoBrandKeys, setNoLogoBrandKeys] = useState<ReadonlySet<string>>(() => new Set());
   const [topLogoSelection, setTopLogoSelection] = useState(TOP_LOGO_MATCH_BRAND);
   const [customLogoRequest, setCustomLogoRequest] = useState('');
   const designerRootRef = useRef<HTMLDivElement>(null);
@@ -230,12 +233,18 @@ export default function CustomEnclosureDesigner() {
         return response.json() as Promise<{
           brands?: CustomerSubwooferBrand[];
           logoOptions?: string[];
+          noLogoBrands?: string[];
         }>;
       })
       .then((data) => {
         if (cancelled) return;
         setSubwooferCatalog(Array.isArray(data.brands) ? data.brands : []);
         setLogoOptions(Array.isArray(data.logoOptions) ? data.logoOptions : []);
+        setNoLogoBrandKeys(new Set(
+          (Array.isArray(data.noLogoBrands) ? data.noLogoBrands : [])
+            .map((name) => String(name ?? '').trim().toLowerCase())
+            .filter(Boolean),
+        ));
         setCatalogState('ready');
       })
       .catch(() => {
@@ -461,7 +470,10 @@ export default function CustomEnclosureDesigner() {
     topLogoSelection,
     customLogoRequest,
     inputs.subwooferBrand,
+    noLogoBrandKeys,
   );
+  const subwooferBrandHasNoLogo = !!inputs.subwooferBrand
+    && noLogoBrandKeys.has(String(inputs.subwooferBrand).trim().toLowerCase());
   const canAddToCart =
     pricing.status === 'ok' &&
     calculations.baffleCheck.status !== 'DOES NOT FIT' &&
@@ -648,11 +660,15 @@ export default function CustomEnclosureDesigner() {
   // If the route returns 404/503/etc, we silently skip — viewer still
   // works without a logo.
   useEffect(() => {
-    const selectedBrand = topLogoSelection === TOP_LOGO_MATCH_BRAND
+    const requestedBrand = topLogoSelection === TOP_LOGO_MATCH_BRAND
       ? inputs.subwooferBrand
       : topLogoSelection === TOP_LOGO_NONE || topLogoSelection === TOP_LOGO_CUSTOM
         ? ''
         : topLogoSelection;
+    // A brand whose logo is never used shows no logo (the server refuses it as well).
+    const selectedBrand = requestedBrand && noLogoBrandKeys.has(String(requestedBrand).trim().toLowerCase())
+      ? ''
+      : requestedBrand;
 
     if (!selectedBrand) {
       setSelectedLogoName('None');
@@ -685,6 +701,7 @@ export default function CustomEnclosureDesigner() {
     };
   }, [
     inputs.subwooferBrand,
+    noLogoBrandKeys,
     setSelectedLogoName,
     setLogoEpsContent,
     topLogoSelection,
@@ -1032,7 +1049,11 @@ export default function CustomEnclosureDesigner() {
                   >
                     <option value={TOP_LOGO_MATCH_BRAND}>
                       Match subwoofer brand
-                      {inputs.subwooferBrand ? ` (${inputs.subwooferBrand})` : ''}
+                      {inputs.subwooferBrand
+                        ? subwooferBrandHasNoLogo
+                          ? ` (no logo for ${inputs.subwooferBrand})`
+                          : ` (${inputs.subwooferBrand})`
+                        : ''}
                     </option>
                     <option value={TOP_LOGO_CUSTOM}>Custom request…</option>
                     <option value={TOP_LOGO_NONE}>No top logo</option>
@@ -1046,7 +1067,13 @@ export default function CustomEnclosureDesigner() {
                     ))}
                   </select>
                 </Field>
-                {topLogoSelection !== TOP_LOGO_CUSTOM && topLogoSelection !== TOP_LOGO_NONE && (
+                {resolvedTopLogoRequest.blockedBrand ? (
+                  <p className="mt-1 text-[11px] text-text-muted">
+                    {resolvedTopLogoRequest.valid
+                      ? `${resolvedTopLogoRequest.blockedBrand} does not allow its logo to be used, so this enclosure is made without a top logo. You can choose another logo or describe a custom one.`
+                      : `The ${resolvedTopLogoRequest.blockedBrand} logo is not available. Choose another top logo.`}
+                  </p>
+                ) : topLogoSelection !== TOP_LOGO_CUSTOM && topLogoSelection !== TOP_LOGO_NONE && (
                   <p className="mt-1 text-[11px] text-text-muted">
                     Stored artwork appears in the preview when available. Your selected logo name is always included with the order.
                   </p>

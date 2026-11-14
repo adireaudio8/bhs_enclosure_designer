@@ -24,6 +24,7 @@
 
 import { NextResponse } from 'next/server';
 import { SUPABASE_SERVER_KEY, supabaseServerHeaders } from '@/lib/supabase-server';
+import { readNeverLogoBrandIds } from '@/lib/never-logo-brands';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_KEY = SUPABASE_SERVER_KEY;
@@ -50,10 +51,10 @@ export async function GET(
 
   // Look up the brand row to find logo_path. We try both `name=eq.X`
   // (exact match) — the brands table uses display names like 'Sundown Audio'.
-  let brandRow: { name: string; logo_path: string | null } | null = null;
+  let brandRow: { id?: string; name: string; logo_path: string | null } | null = null;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/brands?name=eq.${encodeURIComponent(brand)}&select=name,logo_path`,
+      `${SUPABASE_URL}/rest/v1/brands?name=eq.${encodeURIComponent(brand)}&select=id,name,logo_path`,
       {
         headers: supabaseServerHeaders(),
         cache: 'no-store',
@@ -66,7 +67,7 @@ export async function GET(
         { status: 502 },
       );
     }
-    const rows = (await res.json()) as Array<{ name: string; logo_path: string | null }>;
+    const rows = (await res.json()) as Array<{ id?: string; name: string; logo_path: string | null }>;
     brandRow = rows[0] ?? null;
   } catch (err) {
     console.error('[brand-logo] brands fetch error:', err);
@@ -74,6 +75,27 @@ export async function GET(
       { error: 'Brand lookup network error' },
       { status: 502 },
     );
+  }
+
+  // A brand marked "Never use this brand's logo" in the calculator never gets its
+  // logo shown. If that mark cannot be read, no logo is served rather than risk one.
+  if (brandRow) {
+    let neverLogoIds: string[];
+    try {
+      neverLogoIds = await readNeverLogoBrandIds();
+    } catch (err) {
+      console.error('[brand-logo] never-use logo setting unreadable:', err);
+      return NextResponse.json(
+        { error: 'Logo rules could not be checked' },
+        { status: 503 },
+      );
+    }
+    if (typeof brandRow.id === 'string' && neverLogoIds.includes(brandRow.id.toLowerCase())) {
+      return NextResponse.json(
+        { error: `No logo for brand: ${brand}` },
+        { status: 404 },
+      );
+    }
   }
 
   if (!brandRow || !brandRow.logo_path) {

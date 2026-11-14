@@ -1,6 +1,7 @@
 import type { SupportedSize } from '@/lib/subwoofer-presets';
 
 export interface BrandCatalogRow {
+  id?: unknown;
   name?: unknown;
   code?: unknown;
   model_codes?: unknown;
@@ -148,12 +149,21 @@ export function buildCustomerSubwooferCatalog(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function buildCustomerLogoChoices(brandRows: BrandCatalogRow[]) {
+/**
+ * The brand logos a customer may choose. A brand marked "Never use this brand's
+ * logo" in the calculator (its name, lower case, in `neverLogoBrandKeys`) is
+ * left out.
+ */
+export function buildCustomerLogoChoices(
+  brandRows: BrandCatalogRow[],
+  neverLogoBrandKeys: ReadonlySet<string> = new Set(),
+) {
   const byName = new Map<string, string>();
   for (const brand of brandRows) {
     const name = String(brand.name ?? '').trim();
     if (!name) continue;
     const key = name.toLowerCase();
+    if (neverLogoBrandKeys.has(key)) continue;
     if (!byName.has(key)) byName.set(key, name);
   }
   return [...byName.values()].sort((a, b) => a.localeCompare(b));

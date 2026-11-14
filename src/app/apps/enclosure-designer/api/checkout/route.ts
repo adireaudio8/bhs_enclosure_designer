@@ -20,6 +20,7 @@ import { getEnclosureEngineRevision } from '@/lib/enclosure-engine-provenance';
 import { shopifyAdminGraphQL } from '@/lib/shopify-admin';
 import { normalizeCustomerNotes } from '@/lib/customer-notes';
 import { resolveTopLogoRequest } from '@/lib/top-logo-request';
+import { readNeverLogoBrandKeys } from '@/lib/never-logo-brands';
 
 export const runtime = 'nodejs';
 
@@ -146,14 +147,41 @@ export async function POST(req: Request) {
   const inputs = sanitizeCustomerEnclosureInputs(body.inputs);
   const customerNotes = normalizeCustomerNotes(body.customerNotes);
   const engineRevision = getEnclosureEngineRevision();
-  const topLogo = resolveTopLogoRequest(
+  const logoBrandSource = inputs.subwooferBrand ?? body.designSpecs.brand;
+  const requestedTopLogo = resolveTopLogoRequest(
     body.designSpecs.topLogoSelection,
     body.designSpecs.customLogoRequest,
-    inputs.subwooferBrand ?? body.designSpecs.brand,
+    logoBrandSource,
   );
+  // A brand logo (chosen, or matched to the subwoofer brand) is checked against
+  // the brands marked "Never use this brand's logo" in the calculator. If those
+  // marks cannot be read, the order waits rather than risk an unwanted logo.
+  let topLogo = requestedTopLogo;
+  if (requestedTopLogo.logoName && (requestedTopLogo.mode === 'brand' || requestedTopLogo.mode === 'match-brand')) {
+    let neverLogoKeys: Set<string>;
+    try {
+      neverLogoKeys = await readNeverLogoBrandKeys();
+    } catch (error) {
+      console.error('[checkout] never-use logo setting unreadable', error);
+      return NextResponse.json(
+        { error: 'The top logo could not be checked. Please try again in a moment.' },
+        { status: 503 },
+      );
+    }
+    topLogo = resolveTopLogoRequest(
+      body.designSpecs.topLogoSelection,
+      body.designSpecs.customLogoRequest,
+      logoBrandSource,
+      neverLogoKeys,
+    );
+  }
   if (!topLogo.valid) {
     return NextResponse.json(
-      { error: 'Describe the custom top logo before continuing to checkout.' },
+      {
+        error: topLogo.blockedBrand
+          ? `The ${topLogo.blockedBrand} logo is not available. Choose another top logo before continuing to checkout.`
+          : 'Describe the custom top logo before continuing to checkout.',
+      },
       { status: 422 },
     );
   }

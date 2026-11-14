@@ -1,5 +1,14 @@
 # BHS Enclosure Designer App
 
+**November 14, 2026 never-use brand logos:** a brand marked "Never use this brand's
+logo" in the calculator's Manage Logos (app_settings `logo_never_brands`) is no longer
+offered as a top logo and never appears in the 3D preview (the brand-logo route
+refuses it). "Match subwoofer brand" for such a brand orders no top logo, recorded as
+"No top logo (<brand> does not allow its logo)"; choosing its logo outright is refused
+at checkout. If the marks cannot be read, no brand logo is offered or served and
+checkout asks the customer to retry rather than risk one. Engine, pricing and geometry
+are unchanged; tests, type check, engine parity and production build pass.
+
 **November 13, 2026 side port height and subwoofer placement:** shared engine
 `274568b37e0ae5a62b5dd26b4e1ed79e4654163b` lets the height of a side-mounted round port
 be set, and places the subwoofer to the right of an elbowed side tube where that
