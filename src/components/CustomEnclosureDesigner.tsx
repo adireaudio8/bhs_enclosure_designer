@@ -42,14 +42,12 @@ import {
   findNearestSafeWindowOffsets,
   findNearestSafeXOffset,
   getSafeOffsetRange,
-  panelWidthInches,
   resolveDefaultWindowOffsets,
   resolveTerminalPanel,
   resolveTerminalPlacementOffset,
   resolveWindowDimensions,
   resolveWindowPanel,
-  SAFETY_BORDER,
-  TERMINAL_HALF_WIDTH,
+  terminalOffsetRange,
 } from '@adireaudio/enclosure-engine';
 import {
   SUB_BRANDS,
@@ -474,7 +472,7 @@ export default function CustomEnclosureDesigner() {
   );
   const subwooferBrandHasNoLogo = !!inputs.subwooferBrand
     && noLogoBrandKeys.has(String(inputs.subwooferBrand).trim().toLowerCase());
-  const canAddToCart =
+  const canAddToCartBase =
     pricing.status === 'ok' &&
     calculations.baffleCheck.status !== 'DOES NOT FIT' &&
     subwooferPlacementSafe &&
@@ -532,11 +530,17 @@ export default function CustomEnclosureDesigner() {
         currentTerminalPanel,
         currentTerminalOffset,
       );
-  const terminalPanelWidth = panelWidthInches(currentTerminalPanel, inputs, calculations, cutList);
-  const maxTerminalOffset = Math.max(
-    0,
-    terminalPanelWidth / 2 - TERMINAL_HALF_WIDTH - SAFETY_BORDER,
-  );
+  // The offset's ends: where the cup's inside plate keeps an inch from the pieces at each end
+  // (the baffle and back, or the sides and the port). Null when no place on the panel works.
+  const terminalRange = isNoTerminalCup
+    ? null
+    : terminalOffsetRange(inputs, calculations, cutList, currentTerminalPanel);
+  const minTerminalOffset = terminalRange?.min ?? 0;
+  const maxTerminalOffset = terminalRange?.max ?? 0;
+  // A cup placed by hand must pass the check the cutting files make (the Top is checked above).
+  const customTerminalSafe = !isTerminalCustomized || isNoTerminalCup
+    || currentTerminalPanel === 'Top' || terminalPlacementCheck.safe;
+  const canAddToCart = canAddToCartBase && customTerminalSafe;
 
   function handleTerminalEnable(enabled: boolean) {
     setHasInteracted(true);
@@ -1431,8 +1435,8 @@ export default function CustomEnclosureDesigner() {
                   </Field>
                   {!isNoTerminalCup && (
                     <Field
-                      label={`X offset${maxTerminalOffset > 0
-                        ? ` (±${maxTerminalOffset.toFixed(2)}″)`
+                      label={`X offset${terminalRange
+                        ? ` (${minTerminalOffset.toFixed(2)}″ to ${maxTerminalOffset.toFixed(2)}″)`
                         : ''}`}
                     >
                       <NumberInput
@@ -1441,12 +1445,12 @@ export default function CustomEnclosureDesigner() {
                           setHasInteracted(true);
                           const snapped = Math.round(v / 0.125) * 0.125;
                           const clamped = Math.max(
-                            -maxTerminalOffset,
+                            minTerminalOffset,
                             Math.min(maxTerminalOffset, snapped),
                           );
                           setInputs({ terminalXOffset: clamped });
                         }}
-                        min={-maxTerminalOffset}
+                        min={minTerminalOffset}
                         max={maxTerminalOffset}
                         step={0.125}
                       />
@@ -1465,13 +1469,17 @@ export default function CustomEnclosureDesigner() {
                       <span>
                         {terminalPlacementCheck.conflict?.label ?? 'Terminal placement is outside the safe area.'}
                       </span>
-                      <button
-                        type="button"
-                        onClick={handleTerminalSnap}
-                        className="px-2 py-1 rounded bg-red-700 hover:bg-red-600 text-white whitespace-nowrap text-[11px]"
-                      >
-                        Snap to safe
-                      </button>
+                      {terminalRange ? (
+                        <button
+                          type="button"
+                          onClick={handleTerminalSnap}
+                          className="px-2 py-1 rounded bg-red-700 hover:bg-red-600 text-white whitespace-nowrap text-[11px]"
+                        >
+                          Snap to safe
+                        </button>
+                      ) : (
+                        <span className="whitespace-nowrap">Try another panel</span>
+                      )}
                     </div>
                   )
                 )}
@@ -1544,6 +1552,11 @@ export default function CustomEnclosureDesigner() {
               {pricing.status === 'ok' && calculations.baffleCheck.status !== 'DOES NOT FIT' && !subwooferPlacementSafe && (
                 <p className="text-[11px] text-red-400 mb-2">
                   The subwoofer position is outside the safe build area. Recenter it or use Snap to safe.
+                </p>
+              )}
+              {pricing.status === 'ok' && !customTerminalSafe && (
+                <p className="text-[11px] text-red-400 mb-2">
+                  The terminal cup is too close to a panel inside the box. Move it, use Snap to safe, or turn off Customize.
                 </p>
               )}
               {pricing.status === 'ok' && topLogoSelection === TOP_LOGO_CUSTOM && !resolvedTopLogoRequest.valid && (

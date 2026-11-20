@@ -242,6 +242,14 @@ export async function POST(req: Request) {
       { error: terminalCheck.conflict?.label ?? 'Rear-wall terminal placement is unsafe.' },
       { status: 422 },
     );
+  } else if (terminalCustomized && terminalPanel !== 'None') {
+    // A cup placed by hand must pass the check the cutting files make: its inside plate keeps an
+    // inch from every piece around it. A cup left in its standard place is built as before.
+    const terminalCheck = checkTerminalPlacement(inputs, calculations, generateCutList(inputs, calculations), terminalPanel, terminalOffset);
+    if (!terminalCheck.safe) return NextResponse.json(
+      { error: terminalCheck.conflict?.label ?? 'Terminal cup placement is unsafe.' },
+      { status: 422 },
+    );
   }
   const windowEnabled = !!inputs.windowEnabled;
   const windowPanel = windowEnabled ? resolveWindowPanel(inputs) : 'None';
